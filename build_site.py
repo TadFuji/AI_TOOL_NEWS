@@ -69,21 +69,24 @@ def parse_markdown_file(filepath):
         body_text = "\n".join(lines[1:]).strip()
 
         # Check if "Updates not found" or "No significant news"
-        if "Updates not found" in body_text or "No significant news" in body_text:
+        if "Updates not found" in body_text or "No significant news" in body_text or body_text.strip() == "":
             continue # Skip empty cards
 
         # Parse Fields (Date, URL, Importance, Summary, Why)
-        # Using simple regex to extract values if present
-        url_match = re.search(r'\- \*\*URL\*\*: (.*)', body_text)
-        summary_match = re.search(r'\- \*\*Summary\*\*: (.*)', body_text)
-        why_match = re.search(r'\- \*\*Why\*\*: (.*)', body_text)
+        url_match = re.search(r'(?:- )?\*\*URL\*\*:? (.*)', body_text)
+        summary_match = re.search(r'(?:- )?\*\*Summary\*\*:? (.*)', body_text)
+        why_match = re.search(r'(?:- )?\*\*Why\*\*:? (.*)', body_text)
         
         url = url_match.group(1).strip() if url_match else "#"
-        summary = summary_match.group(1).strip() if summary_match else body_text
-        why = why_match.group(1).strip() if why_match else "New update detected."
         
-        # Clean up summary (remove markdown bolds if any)
-        summary = summary.replace("**", "")
+        # IMPROVED FALLBACK: If summary regex fails, use the whole body text (truncated)
+        if summary_match:
+            summary = summary_match.group(1).strip().replace("**", "")
+        else:
+            # Clean up the body text for display
+            summary = body_text.replace("\n", "<br>")
+        
+        why = why_match.group(1).strip() if why_match else "Check details in post."
 
         # Generate Card HTML
         card = f"""

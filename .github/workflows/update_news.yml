@@ -1,0 +1,43 @@
+name: Daily AI News Update
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'  # Run every 3 hours
+  workflow_dispatch:      # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-news:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run News Collection
+      env:
+        XAI_API_KEY: ${{ secrets.XAI_API_KEY }}  # Must be set in GitHub Settings
+      run: |
+        python collect_ai_news.py
+
+    - name: Build Website
+      run: |
+        python build_site.py
+
+    - name: Commit and Push changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "Automated News Update [skip ci]"
+        branch: main
+        file_pattern: 'docs/* reports/*'
