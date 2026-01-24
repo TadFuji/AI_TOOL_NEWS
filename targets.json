@@ -1,0 +1,263 @@
+[
+    {
+        "category": "1. Top Tier",
+        "tools": [
+            {
+                "name": "ChatGPT",
+                "accounts": [
+                    "@OpenAINewsroom",
+                    "@OpenAIDevs"
+                ]
+            },
+            {
+                "name": "Gemini",
+                "accounts": [
+                    "@GeminiApp",
+                    "@GoogleDeepMind"
+                ]
+            },
+            {
+                "name": "Claude",
+                "accounts": [
+                    "@claudeai",
+                    "@AnthropicAI"
+                ]
+            },
+            {
+                "name": "Perplexity",
+                "accounts": [
+                    "@PerplexityAI"
+                ]
+            },
+            {
+                "name": "Microsoft Copilot",
+                "accounts": [
+                    "@Microsoft365",
+                    "@MSFTCopilot"
+                ]
+            },
+            {
+                "name": "Meta AI",
+                "accounts": [
+                    "@MetaAI",
+                    "@ylecun"
+                ]
+            }
+        ]
+    },
+    {
+        "category": "2. Google Ecosystem & Labs",
+        "tools": [
+            {
+                "name": "Google AI Studio",
+                "accounts": [
+                    "@GoogleDeepMind",
+                    "@GoogleDevelopers"
+                ]
+            },
+            {
+                "name": "Project IDX",
+                "accounts": [
+                    "@GoogleDevs"
+                ]
+            },
+            {
+                "name": "Google Labs Services",
+                "accounts": [
+                    "@GoogleLabs"
+                ]
+            }
+        ]
+    },
+    {
+        "category": "3. Coding & Development",
+        "tools": [
+            {
+                "name": "Manus",
+                "accounts": [
+                    "@ManusAI_HQ"
+                ]
+            },
+            {
+                "name": "Cursor",
+                "accounts": [
+                    "@cursor_ai"
+                ]
+            },
+            {
+                "name": "GitHub Copilot",
+                "accounts": [
+                    "@GitHub"
+                ]
+            },
+            {
+                "name": "v0 (Vercel)",
+                "accounts": [
+                    "@Vercel"
+                ]
+            },
+            {
+                "name": "Hugging Face",
+                "accounts": [
+                    "@huggingface"
+                ]
+            },
+            {
+                "name": "NVIDIA AI",
+                "accounts": [
+                    "@NVIDIAAI"
+                ]
+            }
+        ]
+    },
+    {
+        "category": "4. Key AI Companies",
+        "tools": [
+            {
+                "name": "OpenAI",
+                "accounts": [
+                    "@OpenAI",
+                    "@sama"
+                ]
+            },
+            {
+                "name": "xAI",
+                "accounts": [
+                    "@xai",
+                    "@grok",
+                    "@elonmusk"
+                ]
+            },
+            {
+                "name": "Anthropic",
+                "accounts": [
+                    "@AnthropicAI"
+                ]
+            },
+            {
+                "name": "Sakana AI",
+                "accounts": [
+                    "@SakanaAI_JP"
+                ]
+            }
+        ]
+    },
+    {
+        "category": "5. Search & Research",
+        "tools": [
+            {
+                "name": "Genspark",
+                "accounts": [
+                    "@genspark_ai"
+                ]
+            },
+            {
+                "name": "Felo",
+                "accounts": [
+                    "Felo AI"
+                ]
+            }
+        ]
+    },
+    {
+        "category": "6. Creative",
+        "tools": [
+            {
+                "name": "Midjourney",
+                "accounts": [
+                    "@midjourney"
+                ]
+            },
+            {
+                "name": "Runway",
+                "accounts": [
+                    "@runwayml"
+                ]
+            },
+            {
+                "name": "Suno",
+                "accounts": [
+                    "@suno_ai_"
+                ]
+            },
+            {
+                "name": "Udio",
+                "accounts": [
+                    "@udiomusic"
+                ]
+            },
+            {
+                "name": "Kling AI",
+                "accounts": [
+                    "@Kling_ai"
+                ]
+            },
+            {
+                "name": "Luma Dream Machine",
+                "accounts": [
+                    "@LumaLabsAI"
+                ]
+            },
+            {
+                "name": "Black Forest Labs (FLUX.1)",
+                "accounts": [
+                    "@bfl_ml"
+                ]
+            },
+            {
+                "name": "Hailuo AI (MiniMax)",
+                "accounts": [
+                    "@Hailuo_AI"
+                ]
+            },
+            {
+                "name": "Pika",
+                "accounts": [
+                    "@pika_labs"
+                ]
+            },
+            {
+                "name": "Leonardo.ai",
+                "accounts": [
+                    "@LeonardoAi"
+                ]
+            },
+            {
+                "name": "ElevenLabs",
+                "accounts": [
+                    "@elevenlabsio"
+                ]
+            },
+            {
+                "name": "HeyGen",
+                "accounts": [
+                    "@HeyGen_Official"
+                ]
+            }
+        ]
+    },
+    {
+        "category": "7. Others",
+        "tools": [
+            {
+                "name": "Grok",
+                "accounts": [
+                    "@grok"
+                ]
+            },
+            {
+                "name": "Notion AI",
+                "accounts": [
+                    "@NotionHQ"
+                ]
+            },
+            {
+                "name": "Canva",
+                "accounts": [
+                    "@Canva",
+                    "@CanvaProduct"
+                ]
+            }
+        ]
+    }
+]
