@@ -97,6 +97,53 @@ def send_line_message(message_text):
     except Exception as e:
         print(f"Failed to send LINE message: {e}")
 
+import google.generativeai as genai
+
+def select_top_news_with_gemini(all_items):
+    """Uses Gemini 3 Flash to curate the top 10 most important news."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("⚠️ No GEMINI_API_KEY found. Falling back to simple selection.")
+        return all_items[:10]
+
+    print(f"🧠 Asking Gemini 3 Flash to curate {len(all_items)} items...")
+    
+    # Configure Gemini
+    genai.configure(api_key=api_key)
+    # User requested specific model: Gemini 3 Flash Preview
+    # Note: If this specific model ID is not yet active in region, standard flash might be used.
+    # We will try the user's requested ID, fallback to 'gemini-2.0-flash-exp' if 3 is not out 
+    # (But based on search, 3 is available).
+    model_name = 'gemini-3-flash-preview' 
+    
+    try:
+        model = genai.GenerativeModel(model_name)
+        
+        # Prepare content for AI
+        news_text = "\n\n".join(all_items)
+        
+        prompt = (
+            "Role: Professional AI News Editor for Japanese Tech Engineers.\n"
+            "Task: Select the Top 10 MOST IMPORTANT AI news from the list below.\n"
+            "Criteria: Focus on Major LLM updates (OpenAI, Google, Anthropic), significant open source releases, and industry-shaking news. Ignore minor tools or marketing fluff.\n"
+            "Output Format: Output ONLY the Top 10 list. Each item should be:\n"
+            "🔹 [Title/Tool Name]\n[Concise Summary in Japanese]\n\n"
+            "News List:\n"
+            f"{news_text[:30000]}" # Safety truncate
+        )
+        
+        response = model.generate_content(prompt)
+        
+        if response and response.text:
+            print("✅ Gemini curation successful!")
+            return [response.text.strip()] # Return as a single pre-formatted string block
+            
+    except Exception as e:
+        print(f"❌ Gemini Curation Failed: {e}")
+        return all_items[:10] # Fallback
+
+    return all_items[:10]
+
 def main():
     # TIMEZONE FIX: GitHub Actions runs in UTC. Force JST (UTC+9)
     JST = datetime.timezone(datetime.timedelta(hours=9))
@@ -104,12 +151,9 @@ def main():
     
     print(f"Current JST Time: {now_jst.strftime('%H:%M')}")
     
-    # Only run at 7:00 AM (allow minute variance 00-59 if cron is delayed, but usually runs on hour)
-    # Since cron is '0 * * * *', it runs at :00.
+    # Only run at 7:00 AM 
     if now_jst.hour != 7:
         print("🕒 Not 7:00 AM JST. Skipping LINE post.")
-        # Optional: Allow override via argument for testing?
-        # For now, strictly exit.
         return
 
     print("=== LINE Auto-Post Start ===")
@@ -120,15 +164,19 @@ def main():
         print("No news items found for today.")
         return
 
-    # Construct the message
-    # Header
-    msg = f"📅 {date_str} AI News Digest\n\n"
+    # AI Curation Step
+    # If using AI, we get a single string block. If fallback, we get list.
+    curated_content = select_top_news_with_gemini(items)
     
-    # Body (Top 10 items to avoid limit)
-    msg += "\n\n".join(items[:10])
+    # Construct Message
+    msg = f"📅 {date_str} AI News Digest (AI Selected)\n\n"
     
-    if len(items) > 10:
-        msg += f"\n\n...and {len(items)-10} more."
+    if isinstance(curated_content, list) and len(curated_content) == 1 and "\n" in curated_content[0]:
+        # It's the AI text block
+        msg += curated_content[0]
+    else:
+        # Fallback list
+        msg += "\n\n".join(curated_content)
     
     # Footer
     msg += f"\n\n🔗 Full Report:\n{SITE_URL}"

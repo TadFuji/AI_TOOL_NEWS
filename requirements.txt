@@ -3,6 +3,7 @@ python-dotenv
 line-bot-sdk
 feedparser
 python-dateutil>=2.8.2
+google-generativeai
 
 # Marketing Engine (UI & Automation)
 streamlit>=1.30.0
