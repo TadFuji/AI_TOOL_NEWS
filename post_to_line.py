@@ -88,6 +88,20 @@ def send_line_message(message_text):
         print(f"Failed to send LINE message: {e}")
 
 def main():
+    # TIMEZONE FIX: GitHub Actions runs in UTC. Force JST (UTC+9)
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    now_jst = datetime.datetime.now(JST)
+    
+    print(f"Current JST Time: {now_jst.strftime('%H:%M')}")
+    
+    # Only run at 7:00 AM (allow minute variance 00-59 if cron is delayed, but usually runs on hour)
+    # Since cron is '0 * * * *', it runs at :00.
+    if now_jst.hour != 7:
+        print("🕒 Not 7:00 AM JST. Skipping LINE post.")
+        # Optional: Allow override via argument for testing?
+        # For now, strictly exit.
+        return
+
     print("=== LINE Auto-Post Start ===")
     
     items, date_str = get_latest_report_items()

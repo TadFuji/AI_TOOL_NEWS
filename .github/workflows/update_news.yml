@@ -2,7 +2,7 @@ name: Daily AI News Update
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # Daily at 07:00 JST (22:00 UTC previous day)
+    - cron: '0 * * * *'  # Run every hour
   workflow_dispatch:      # Allow manual trigger
 
 concurrency:
