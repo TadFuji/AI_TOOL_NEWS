@@ -131,11 +131,13 @@ def generate_html_from_items(items, title, tool_map):
     unique_items = []
     for item in items:
         # Create a unique signature for the news item
-        # Using Tool + Date + Summary (first 30 chars) to identify duplicates
-        # from overlapping report windows
-        # Normalize summary for key generation (remove spaces/lowercase)
-        summary_key = re.sub(r'\s+', '', item['summary'])[:30].lower()
-        key = f"{item['tool']}_{item['date']}_{summary_key}"
+        # URL is the most reliable unique identifier for a social media post
+        key = item['url'].strip()
+        
+        # Fallback for manual/weird entries without URL (rare)
+        if not key or key == "#":
+            summary_key = re.sub(r'\s+', '', item['summary'])[:30].lower()
+            key = f"{item['tool']}_{item['date']}_{summary_key}"
         
         if key in seen:
             continue

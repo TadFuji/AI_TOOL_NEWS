@@ -85,17 +85,19 @@ def get_ai_news(tool_name, accounts):
                 if response.status_code == 200:
                     data = response.json()
                     # Parse specific /v1/responses format
-                    # Content is deeply nested in output -> assistant message -> content -> text
                     outputs = data.get('output', [])
-                    for item in reversed(outputs): # Look for the final answer
+                    for item in reversed(outputs): 
                         if item.get('role') == 'assistant' and 'content' in item:
                             content_list = item['content']
-                            # Combine all text parts
                             full_text = ""
                             for part in content_list:
                                 if part.get('type') == 'output_text':
                                     full_text += part.get('text', "")
-                            return full_text
+                            
+                            # CLEANING: Remove Grok's citation markers [[1]](url) or just [[1]]
+                            # Use regex to strip pattern content
+                            clean_text = re.sub(r'\[\[\d+\]\](?:\([^)]+\))?', '', full_text)
+                            return clean_text.strip()
                     return "Error: No text content in agent response."
                 elif response.status_code == 429:
                     time.sleep(5) # Wait for rate limit
