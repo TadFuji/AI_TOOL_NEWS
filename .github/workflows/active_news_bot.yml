@@ -25,7 +25,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt
+        pip install -r requirements_bot.txt
 
     - name: Run News Collection (Tools)
       env:
