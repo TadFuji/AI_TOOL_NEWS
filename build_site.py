@@ -175,10 +175,10 @@ def generate_html_from_items(items, title, tool_map):
         card_buttons = f"""
             <div class="news-footer" style="display: flex; gap: 10px;">
                 <a href="{valid_url}" target="_blank" class="source-link">
-                    { 'View Post' if not is_suspicious else '⚠️ Search Result (Auto-fixed)' }
+                    { '投稿を見る' if not is_suspicious else '⚠️ 検索結果 (自動修正)' }
                 </a>
                 <a href="{search_url}" target="_blank" class="source-link" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);">
-                    🔍 Verify
+                    🔍 検証する
                 </a>
             </div>
         """
@@ -198,7 +198,7 @@ def generate_html_from_items(items, title, tool_map):
         content_html += card
         
     if not content_html:
-        content_html = "<div class='no-news'>No news found for this period.</div>"
+        content_html = "<div class='no-news'>期間内のニュースは見つかりませんでした。</div>"
         
     return HTML_HEADER.format(page_title=title) + content_html + HTML_FOOTER
 
