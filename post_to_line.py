@@ -7,7 +7,9 @@ from linebot.v3.messaging import (
     Configuration,
     ApiClient,
     MessagingApi,
+    MessagingApi,
     PushMessageRequest,
+    BroadcastRequest,
     TextMessage,
 )
 
@@ -82,12 +84,14 @@ def send_line_message(message_text):
     try:
         with ApiClient(configuration) as api_client:
             line_bot_api = MessagingApi(api_client)
-            push_message_request = PushMessageRequest(
-                to=user_id,
+            
+            # BROADCAST MODE (Send to ALL followers)
+            # Was: PushMessageRequest(to=user_id, ...)
+            broadcast_request = BroadcastRequest(
                 messages=[TextMessage(text=message_text)]
             )
-            line_bot_api.push_message(push_message_request)
-            print("Successfully sent LINE message.")
+            line_bot_api.broadcast(broadcast_request)
+            print("Successfully sent LINE BROADCAST message.")
     except Exception as e:
         print(f"Failed to send LINE message: {e}")
 
