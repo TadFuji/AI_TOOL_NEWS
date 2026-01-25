@@ -104,7 +104,8 @@ def main():
     # 1. Gather all news items from today's reports
     # Assuming reports are in reports/YYYY-MM-DD/*.md
     # Or just recursive search in reports/
-    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    today_str = datetime.datetime.now(JST).strftime("%Y-%m-%d")
     
     # We focus on the latest reports to avoid posting old stuff if the script runs locally
     # But strictly speaking, the history file prevents duplicates mostly.
@@ -132,10 +133,10 @@ def main():
             
             tweet_text = f"📢 {item['tool']} Update!\n\n{item['summary']}\n\n{item['url']}\n#AI #{item['category'].replace(' ', '')}"
             
-            # Truncate if too long (rough check, URL is 23 chars)
-            if len(tweet_text) > 280:
+            # Truncate if too long (Safety buffer: 260 chars instead of 280)
+            if len(tweet_text) > 260:
                 # Naive truncation
-                excess = len(tweet_text) - 280
+                excess = len(tweet_text) - 260
                 item['summary'] = item['summary'][:-excess-5] + "..."
                 tweet_text = f"📢 {item['tool']} Update!\n\n{item['summary']}\n\n{item['url']}\n#AI"
 

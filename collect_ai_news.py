@@ -25,7 +25,9 @@ BASE_REPORT_DIR = "reports"
 
 def setup_report_dir():
     """Creates a directory for today's reports."""
-    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    # TIMEZONE FIX: GitHub Actions runs in UTC. Force JST (UTC+9)
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    today = datetime.datetime.now(JST).strftime("%Y-%m-%d")
     path = os.path.join(BASE_REPORT_DIR, today)
     if not os.path.exists(path):
         os.makedirs(path)
@@ -45,7 +47,8 @@ def get_ai_news(tool_name, accounts):
         "Authorization": f"Bearer {API_KEY}"
     }
     
-    current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    current_date = datetime.datetime.now(JST).strftime("%Y-%m-%d")
     accounts_str = ", ".join(accounts)
     
     # Prompt optimized for Agentic execution
