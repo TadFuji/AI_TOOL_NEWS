@@ -3,21 +3,23 @@ import json
 import time
 import datetime
 import requests
+import re
 
 # Configuration
 def load_api_key():
     env_path = ".env"
     if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
+        with open(env_path, 'r', encoding='utf-8') as f:
             for line in f:
                 if line.startswith("XAI_API_KEY="):
                     return line.strip().split("=")[1]
     return os.environ.get("XAI_API_KEY")
 
 API_KEY = load_api_key()
-if not API_KEY:
-    raise ValueError("API Key not found. Please set XAI_API_KEY in .env file.")
-MODEL = "grok-4-1-fast-non-reasoning"  # Cost-effective & fast
+# Crucial: Use Agent Endpoint and Grok-4 family for server-side x_search
+API_URL = "https://api.x.ai/v1/responses"
+MODEL = "grok-4-1-fast-non-reasoning" 
+
 TARGETS_FILE = "targets.json"
 BASE_REPORT_DIR = "reports"
 
@@ -36,9 +38,8 @@ def load_targets():
 
 def get_ai_news(tool_name, accounts):
     """
-    Queries Grok API for the latest news about a specific tool/account.
+    Queries xAI Agent API to autonomously search X and report news.
     """
-    url = "https://api.x.ai/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {API_KEY}"
@@ -46,108 +47,128 @@ def get_ai_news(tool_name, accounts):
     
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
     accounts_str = ", ".join(accounts)
+    
+    # Prompt optimized for Agentic execution
     prompt = (
-        f"Current Date: {current_date}. "
-        f"Fetch the latest tweets from {accounts_str} in the last 24 hours using x_search. "
-        "FILTERING TASK: Analyze each tweet for 'Newsworthiness'. "
-        "Criteria for News: New Model Releases, Feature Updates, API Changes, Strategic Announcements, or Major Policy updates. "
-        "Criteria for Exclusion: Casual replies to users, single-word tweets, memes, minor maintenance, or retweets without significant added context. "
-        "OUTPUT FORMAT (STRICT): "
-        "If news is found, you MUST use this exact format for each item:"
-        "- **Date**: YYYY-MM-DD"
-        "- **URL**: https://..."
-        "- **Summary**: (Concise Japanese summary)"
-        "- **Why**: (Reason for importance)"
-        "If NO posts pass the filter, strictly output: 'No significant news found'."
+        f"Role: Expert AI News Reporter using real-time X data.\n"
+        f"Task: Search for the LATEST significant updates from {accounts_str} within the last 24 hours.\n"
+        f"Current Date: {current_date}\n\n"
+        "STEPS:\n"
+        "1. USE x_search to find posts from these accounts.\n"
+        "2. FILTER for: New Models, Feature Launches, API Updates, or Strategic Partnerships.\n"
+        "3. IGNORE: Replies, memes, maintenance, or generic hype.\n"
+        "4. OUTPUT: If valid news is found, output in this format:\n"
+        "- **Date**: YYYY-MM-DD\n"
+        "- **URL**: (The specific tweet URL found via search)\n"
+        "- **Summary**: (Concise Japanese summary)\n"
+        "- **Why**: (Impact analysis)\n"
+        "If NO significant news is found, output exactly: 'No significant news found'."
     )
 
+    # Native Tool Definition for Server-Side Execution
+    tools = [{"type": "x_search"}]
+
     payload = {
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are a tech news reporter specializing in AI. usage of x_search is MANDATORY to get real-time data."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
+        "input": prompt,
         "model": MODEL,
         "stream": False,
-        "temperature": 0
+        "temperature": 0.0,
+        "tools": tools,
+        "tool_choice": "auto"
     }
 
     try:
-        response = requests.post(url, headers=headers, data=json.dumps(payload))
-        if response.status_code == 200:
-            data = response.json()
-            return data['choices'][0]['message']['content']
-        else:
-            return f"Error: {response.status_code} - {response.text}"
+        # Retry logic for stability
+        for attempt in range(3):
+            try:
+                response = requests.post(API_URL, headers=headers, data=json.dumps(payload), timeout=60)
+                if response.status_code == 200:
+                    data = response.json()
+                    # Parse specific /v1/responses format
+                    # Content is deeply nested in output -> assistant message -> content -> text
+                    outputs = data.get('output', [])
+                    for item in reversed(outputs): # Look for the final answer
+                        if item.get('role') == 'assistant' and 'content' in item:
+                            content_list = item['content']
+                            # Combine all text parts
+                            full_text = ""
+                            for part in content_list:
+                                if part.get('type') == 'output_text':
+                                    full_text += part.get('text', "")
+                            return full_text
+                    return "Error: No text content in agent response."
+                elif response.status_code == 429:
+                    time.sleep(5) # Wait for rate limit
+                    continue
+                else:
+                    return f"Error: {response.status_code} - {response.text}"
+            except requests.exceptions.Timeout:
+                print("Request timed out, retrying...")
+                continue
+        return "Error: Failed after 3 retries"
+
     except Exception as e:
         return f"Exception: {str(e)}"
 
-def validate_url(url):
-    """Checks if a URL is valid and reachable (returns 200)."""
-    if "https://" not in url:
-        return False
-    try:
-        # Fake user agent to avoid bot blocking (Twitter often blocks specific empty agents)
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-        r = requests.head(url, headers=headers, timeout=5, allow_redirects=True)
-        return r.status_code < 400
-    except:
-        return False
 
-def main():
-    print("=== AI News Collection Start ===")
-    report_dir = setup_report_dir()
-    targets = load_targets()
-    
-    total_tools = sum(len(cat['tools']) for cat in targets)
-    current_count = 0
-
+# Main Execution Block
+if __name__ == "__main__":
+    print("=== AI News Collection Start (Agent Mode) ===")
     print(f"Target file: {TARGETS_FILE}")
+    
+    report_dir = setup_report_dir()
     print(f"Report directory: {report_dir}")
+    
+    config = load_targets()
+    
+    # Calculate total tasks
+    total_tools = sum(len(cat['tools']) for cat in config)
     print(f"Total tools to check: {total_tools}")
     print("-" * 30)
 
-    for category_group in targets:
-        category = category_group['category']
-        print(f"\nProcessing Category: {category}")
+    count = 0
+    for category in config:
+        cat_name = category['category']
+        print(f"\nProcessing Category: {cat_name}")
         
-        # Create a combined category report file
-        cat_filename = category.replace(" ", "_").replace(".", "").replace("&", "and").replace("/", "-") + ".md"
-        cat_report_path = os.path.join(report_dir, cat_filename)
-        
-        with open(cat_report_path, 'w', encoding='utf-8') as report_file:
-            report_file.write(f"# {category} - Daily Report\n\n")
-
-            for tool in category_group['tools']:
-                tool_name = tool['name']
-                accounts = tool['accounts']
-                current_count += 1
+        for tool in category['tools']:
+            count += 1
+            name = tool['name']
+            accounts = tool['accounts']
+            
+            print(f"[{count}/{total_tools}] Checking {name} ({', '.join(accounts)})...")
+            
+            # --- AGENT EXECUTION ---
+            try:
+                news_content = get_ai_news(name, accounts)
                 
-                print(f"[{current_count}/{total_tools}] Checking {tool_name} ({', '.join(accounts)})...")
-                
-                # Fetch news
-                content = get_ai_news(tool_name, accounts)
-                
-                report_file.write(f"## {tool_name}\n")
-                report_file.write(content + "\n\n")
-                report_file.write("---\n")
-                
-                # Verify if '特になし' to keep logs clean
-                if "No significant news" in content or "None" in content:
+                # Verify content - if it's just an error or empty, treat as no news
+                if "Error:" in news_content or not news_content.strip():
+                     print(f"  -> Failed/Empty: {news_content[:50]}...")
+                elif "No significant news found" in news_content:
                     print("  -> No verified updates.")
                 else:
-                    print("  -> Update found!")
-                
-                # Sleep to avoid rate limits (politeness)
-                time.sleep(2)
+                    # Clean up markdown code blocks if present
+                    news_content = news_content.replace("```markdown", "").replace("```", "").strip()
+                    
+                    if "**Date**:" in news_content:
+                        print("  -> Update found!")
+                        # Save Report
+                        filename = f"{count}_{name.replace(' ', '_').replace('/', '-')}.md"
+                        filepath = os.path.join(report_dir, filename)
+                        
+                        with open(filepath, 'w', encoding='utf-8') as f:
+                            f.write(f"# {cat_name} - Daily Report\n\n")
+                            f.write(f"## {name}\n")
+                            f.write(news_content + "\n")
+                    else:
+                         print("  -> Output format mismatch (ignoring).")
+
+            except Exception as e:
+                print(f"  -> Critical Failure: {e}")
+            
+            # Gentle pacing to avoid hitting rate limits
+            time.sleep(2)
 
     print("\n=== Collection Complete ===")
     print(f"Reports saved in: {report_dir}")
-
-if __name__ == "__main__":
-    main()
