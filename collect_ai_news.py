@@ -48,7 +48,7 @@ def get_ai_news(tool_name, accounts):
     accounts_str = ", ".join(accounts)
     prompt = (
         f"Current Date: {current_date}. "
-        f"Fetch the latest tweets from {accounts_str} in the last 7 days using x_search. "
+        f"Fetch the latest tweets from {accounts_str} in the last 3 days using x_search. "
         "FILTERING TASK: Analyze each tweet for 'Newsworthiness'. "
         "Criteria for News: New Model Releases, Feature Updates, API Changes, Strategic Announcements, or Major Policy updates. "
         "Criteria for Exclusion: Casual replies to users, single-word tweets, memes, minor maintenance, or retweets without significant added context. "
