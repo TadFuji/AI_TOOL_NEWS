@@ -52,14 +52,13 @@ def get_ai_news(tool_name, accounts):
         "FILTERING TASK: Analyze each tweet for 'Newsworthiness'. "
         "Criteria for News: New Model Releases, Feature Updates, API Changes, Strategic Announcements, or Major Policy updates. "
         "Criteria for Exclusion: Casual replies to users, single-word tweets, memes, minor maintenance, or retweets without significant added context. "
-        "OUTPUT FORMAT: "
-        "For each post that passes the filter, provide: "
-        "- **Date**: YYYY-MM-DD "
-        "- **URL**: (Verified Tweet URL) "
-        "- **Importance**: (High/Medium) "
-        "- **Summary**: (Concise Japanese summary of the news) "
-        "- **Why**: (1-sentence explanation of why this is important) "
-        "If NO posts pass the filter, strictly state 'No significant news found'."
+        "OUTPUT FORMAT (STRICT): "
+        "If news is found, you MUST use this exact format for each item:"
+        "- **Date**: YYYY-MM-DD"
+        "- **URL**: https://..."
+        "- **Summary**: (Concise Japanese summary)"
+        "- **Why**: (Reason for importance)"
+        "If NO posts pass the filter, strictly output: 'No significant news found'."
     )
 
     payload = {
