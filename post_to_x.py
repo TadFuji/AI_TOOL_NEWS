@@ -4,6 +4,10 @@ import glob
 import re
 import datetime
 import tweepy
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configuration
 POSTED_HISTORY_FILE = "posted_history.json"
