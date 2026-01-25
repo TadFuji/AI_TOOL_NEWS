@@ -133,22 +133,6 @@ def main():
                 # Fetch news
                 content = get_ai_news(tool_name, accounts)
                 
-                # VALIDATION STEP
-                if "**URL**:" in content:
-                    import re
-                    # Extract all URLs mentioned
-                    urls = re.findall(r'\*\*URL\*\*: (https?://\S+)', content)
-                    if urls:
-                        valid_content = True
-                        for u in urls:
-                            if not validate_url(u):
-                                print(f"  [WARNING] Invalid/Dead URL detected: {u}")
-                                valid_content = False
-                                break # Fail the whole block if main URL is dead
-                        
-                        if not valid_content:
-                            content = "No significant news found (Filtered: Invalid URL)."
-                
                 report_file.write(f"## {tool_name}\n")
                 report_file.write(content + "\n\n")
                 report_file.write("---\n")
