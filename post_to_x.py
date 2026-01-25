@@ -133,12 +133,9 @@ def main():
             
             tweet_text = f"📢 {item['tool']} Update!\n\n{item['summary']}\n\n{item['url']}\n#AI #{item['category'].replace(' ', '')}"
             
-            # Truncate if too long (Safety buffer: 260 chars instead of 280)
-            if len(tweet_text) > 260:
-                # Naive truncation
-                excess = len(tweet_text) - 260
-                item['summary'] = item['summary'][:-excess-5] + "..."
-                tweet_text = f"📢 {item['tool']} Update!\n\n{item['summary']}\n\n{item['url']}\n#AI"
+            # User instruction: Ignore 280 char limit (X Premium support)
+            # tweet_text is used directly
+            pass
 
             try:
                 # Dry run check could go here if implemented as an arg
