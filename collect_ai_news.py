@@ -116,64 +116,106 @@ def get_ai_news(tool_name, accounts):
         return f"Exception: {str(e)}"
 
 
+import concurrent.futures
+import threading
+
+# Circuit Breaker Globals
+FAILURE_COUNTER = 0
+FAILURE_THRESHOLD = 5
+FAILURE_LOCK = threading.Lock()
+
+def process_tool(category_name, tool, report_dir):
+    """Worker function for parallel execution."""
+    global FAILURE_COUNTER
+    
+    # Circuit Breaker Check
+    with FAILURE_LOCK:
+        if FAILURE_COUNTER >= FAILURE_THRESHOLD:
+            return None # Skip silently if breaker is open
+
+    name = tool['name']
+    accounts = tool['accounts']
+    
+    print(f"🔍 Checking {name}...")
+    
+    try:
+        news_content = get_ai_news(name, accounts)
+        
+        # Success Logic
+        if "Error:" in news_content or not news_content.strip():
+             print(f"  ❌ {name}: Failed/Empty")
+             with FAILURE_LOCK:
+                 FAILURE_COUNTER += 1
+        elif "No significant news found" in news_content:
+             print(f"  ⚪ {name}: No verified updates.")
+             # Reset counter on success (even if no news, API worked)
+             with FAILURE_LOCK:
+                 FAILURE_COUNTER = 0
+        else:
+             print(f"  ✅ {name}: Update found!")
+             # Reset counter
+             with FAILURE_LOCK:
+                 FAILURE_COUNTER = 0
+                 
+             # Save Report
+             # Clean up markdown
+             news_content = news_content.replace("```markdown", "").replace("```", "").strip()
+             
+             count_str = name.replace(' ', '_').replace('/', '-')
+             filename = f"{count_str}.md"
+             filepath = os.path.join(report_dir, filename)
+             
+             with open(filepath, 'w', encoding='utf-8') as f:
+                 f.write(f"# {category_name} - Daily Report\n\n")
+                 f.write(f"## {name}\n")
+                 f.write(news_content + "\n")
+                 
+    except Exception as e:
+        print(f"  🔥 {name}: Critical Failure: {e}")
+        with FAILURE_LOCK:
+             FAILURE_COUNTER += 1
+             
+    time.sleep(1) # Jitter for API kindness
+
 # Main Execution Block
 if __name__ == "__main__":
-    print("=== AI News Collection Start (Agent Mode) ===")
-    print(f"Target file: {TARGETS_FILE}")
+    print("=== AI News Collection Start (Parallel Agent Mode) ===")
     
     report_dir = setup_report_dir()
-    print(f"Report directory: {report_dir}")
-    
     config = load_targets()
     
-    # Calculate total tasks
-    total_tools = sum(len(cat['tools']) for cat in config)
-    print(f"Total tools to check: {total_tools}")
-    print("-" * 30)
-
-    count = 0
+    # Flatten task list for parallel execution
+    tasks = []
     for category in config:
-        cat_name = category['category']
-        print(f"\nProcessing Category: {cat_name}")
-        
         for tool in category['tools']:
-            count += 1
-            name = tool['name']
-            accounts = tool['accounts']
+            tasks.append({
+                "category": category['category'],
+                "tool": tool,
+            })
             
-            print(f"[{count}/{total_tools}] Checking {name} ({', '.join(accounts)})...")
-            
-            # --- AGENT EXECUTION ---
-            try:
-                news_content = get_ai_news(name, accounts)
-                
-                # Verify content - if it's just an error or empty, treat as no news
-                if "Error:" in news_content or not news_content.strip():
-                     print(f"  -> Failed/Empty: {news_content[:50]}...")
-                elif "No significant news found" in news_content:
-                    print("  -> No verified updates.")
-                else:
-                    # Clean up markdown code blocks if present
-                    news_content = news_content.replace("```markdown", "").replace("```", "").strip()
-                    
-                    if "**Date**:" in news_content:
-                        print("  -> Update found!")
-                        # Save Report
-                        filename = f"{count}_{name.replace(' ', '_').replace('/', '-')}.md"
-                        filepath = os.path.join(report_dir, filename)
-                        
-                        with open(filepath, 'w', encoding='utf-8') as f:
-                            f.write(f"# {cat_name} - Daily Report\n\n")
-                            f.write(f"## {name}\n")
-                            f.write(news_content + "\n")
-                    else:
-                         print("  -> Output format mismatch (ignoring).")
+    total_tasks = len(tasks)
+    print(f"🚀 Launching {total_tasks} agents with max_workers=3...")
 
-            except Exception as e:
-                print(f"  -> Critical Failure: {e}")
-            
-            # Gentle pacing to avoid hitting rate limits
-            time.sleep(2)
+    # Parallel Execution
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {executor.submit(process_tool, t['category'], t['tool'], report_dir): t for t in tasks}
+        
+        for future in concurrent.futures.as_completed(futures):
+            # Just consume the results to ensure exceptions are caught if any
+            try:
+                future.result()
+            except Exception as exc:
+                print(f"Thread generated an exception: {exc}")
+                
+            # Circuit Breaker Final Check
+            if FAILURE_COUNTER >= FAILURE_THRESHOLD:
+                print("🚨 CIRCUIT BREAKER TRIPPED: Too many errors. Aborting run.")
+                executor.shutdown(wait=False)
+                break
 
     print("\n=== Collection Complete ===")
-    print(f"Reports saved in: {report_dir}")
+    if FAILURE_COUNTER >= FAILURE_THRESHOLD:
+         # Optional: Trigger notify_failure here if needed, or let GitHub Actions fail
+         # To make Actions fail, exit with non-zero
+         import sys
+         sys.exit(1)

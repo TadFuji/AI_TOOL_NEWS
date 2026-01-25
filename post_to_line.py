@@ -31,17 +31,19 @@ def get_latest_report_items():
     
     all_items = []
     
-    for d in target_dirs:
-        day_path = os.path.join(REPORTS_DIR, d)
-        if os.path.exists(day_path):
-            # Tool Reports
-            files = glob.glob(os.path.join(day_path, "*.md"))
-            # General News Reports
-            files.extend(glob.glob(os.path.join(day_path, "general_news", "*.md")))
-            
-            for fpath in files:
-                items = parse_report_file(fpath)
-                all_items.extend(items)
+    today_folder = os.path.join(REPORTS_DIR, today_str)
+    
+    # User Request: RSS General News ONLY (No Tool Updates)
+    # Collected at 7:00 AM, covering previous 24h.
+    # We only look at 'general_news' subfolder in today's report dir.
+    
+    target_path = os.path.join(today_folder, "general_news", "*.md")
+    files = glob.glob(target_path)
+    
+    all_items = []
+    for fpath in files:
+        items = parse_report_file(fpath)
+        all_items.extend(items)
     
     return all_items, today_str
 

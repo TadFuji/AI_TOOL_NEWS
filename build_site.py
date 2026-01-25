@@ -247,13 +247,41 @@ def build():
         
     archive_links_html = "<h2>Monthly Archives</h2><ul style='list-style:none; padding:0;'>"
     
+    # Optimization: Only rebuild recent months
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    now = datetime.datetime.now(JST)
+    current_month = now.strftime("%Y-%m")
+    # Simple logic for prev month (handle year rollover loosely or just use library)
+    # Actually, easiest is just to parse year/month
+    # Let's just update "This Month" and "Last Month" (calculated robustly)
+    
+    # Calculate Previous Month string
+    first_day = now.replace(day=1)
+    prev_month_date = first_day - datetime.timedelta(days=1)
+    prev_month = prev_month_date.strftime("%Y-%m")
+    
+    targets_to_build = {current_month, prev_month}
+    
+    print(f"⚡ Incremental Build Active. Targets: {targets_to_build}")
+    
     for month, items in sorted(months.items(), reverse=True):
         filename = f"archive_{month}.html"
-        month_html = generate_html_from_items(items, f"Archive: {month}", tool_map)
-        with open(os.path.join(DOCS_DIR, filename), 'w', encoding='utf-8') as f:
-            f.write(month_html)
-        print(f"Generated {filename}")
+        filepath = os.path.join(DOCS_DIR, filename)
         
+        # Build if:
+        # 1. It is a target month (Current/Prev)
+        # 2. File doesn't exist yet (New historical import?)
+        # 3. Always force build if user manually flushes (not implemented, but safe default)
+        
+        if month in targets_to_build or not os.path.exists(filepath):
+            month_html = generate_html_from_items(items, f"Archive: {month}", tool_map)
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(month_html)
+            print(f"  -> Rebuilt: {filename}")
+        else:
+            print(f"  -> Skipped (Cached): {filename}")
+        
+        # Add to Index Link (Always needed)
         archive_links_html += f"<li style='margin:10px 0;'><a href='{filename}' style='color:white; font-size:1.2em;'>{month} ({len(items)} items)</a></li>"
 
     archive_links_html += "</ul>"
