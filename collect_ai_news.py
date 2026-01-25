@@ -87,6 +87,18 @@ def get_ai_news(tool_name, accounts):
     except Exception as e:
         return f"Exception: {str(e)}"
 
+def validate_url(url):
+    """Checks if a URL is valid and reachable (returns 200)."""
+    if "https://" not in url:
+        return False
+    try:
+        # Fake user agent to avoid bot blocking (Twitter often blocks specific empty agents)
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        r = requests.head(url, headers=headers, timeout=5, allow_redirects=True)
+        return r.status_code < 400
+    except:
+        return False
+
 def main():
     print("=== AI News Collection Start ===")
     report_dir = setup_report_dir()
@@ -121,16 +133,29 @@ def main():
                 # Fetch news
                 content = get_ai_news(tool_name, accounts)
                 
-                # Write to individual file (optional, maybe just category is enough? let's do category for now to reduce clutter)
-                # Actually, appending to the category file is better.
+                # VALIDATION STEP
+                if "**URL**:" in content:
+                    import re
+                    # Extract all URLs mentioned
+                    urls = re.findall(r'\*\*URL\*\*: (https?://\S+)', content)
+                    if urls:
+                        valid_content = True
+                        for u in urls:
+                            if not validate_url(u):
+                                print(f"  [WARNING] Invalid/Dead URL detected: {u}")
+                                valid_content = False
+                                break # Fail the whole block if main URL is dead
+                        
+                        if not valid_content:
+                            content = "No significant news found (Filtered: Invalid URL)."
                 
                 report_file.write(f"## {tool_name}\n")
                 report_file.write(content + "\n\n")
                 report_file.write("---\n")
                 
                 # Verify if '特になし' to keep logs clean
-                if "特になし" in content or "None" in content:
-                    print("  -> No major updates.")
+                if "No significant news" in content or "None" in content:
+                    print("  -> No verified updates.")
                 else:
                     print("  -> Update found!")
                 
