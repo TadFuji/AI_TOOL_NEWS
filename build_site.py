@@ -126,7 +126,24 @@ def generate_html_from_items(items, title, tool_map):
     # Regex for valid tweet URL (simple validation)
     tweet_pattern = re.compile(r'https?://(www\.)?(twitter|x)\.com/[a-zA-Z0-9_]+/status/\d+')
 
+    # Deduplication Logic
+    seen = set()
+    unique_items = []
     for item in items:
+        # Create a unique signature for the news item
+        # Using Tool + Date + Summary (first 30 chars) to identify duplicates
+        # from overlapping report windows
+        # Normalize summary for key generation (remove spaces/lowercase)
+        summary_key = re.sub(r'\s+', '', item['summary'])[:30].lower()
+        key = f"{item['tool']}_{item['date']}_{summary_key}"
+        
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_items.append(item)
+    
+    # Use unique_items for generation
+    for item in unique_items:
         # Date Header Grouping
         if item['date'] != current_date:
             current_date = item['date']
