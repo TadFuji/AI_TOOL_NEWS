@@ -123,13 +123,24 @@ def select_top_news_with_gemini(all_items):
         news_text = "\n\n".join(all_items)
         
         prompt = (
-            "Role: Professional AI News Editor for Japanese Tech Engineers.\n"
-            "Task: Select the Top 10 MOST IMPORTANT AI news from the list below.\n"
-            "Criteria: Focus on Major LLM updates (OpenAI, Google, Anthropic), significant open source releases, and industry-shaking news. Ignore minor tools or marketing fluff.\n"
-            "Output Format: Output ONLY the Top 10 list. Each item should be:\n"
-            "🔹 [Title/Tool Name]\n[Concise Summary in Japanese]\n\n"
+            "Role: 敏腕ビジネス誌編集長 (Target: 日本の40代ビジネスパーソン・一般層)\n"
+            "Task: 以下のAIニュースリストから、「今の時代を生きる大人にとって、本当に知っておくべきトップ10」を厳選してください。\n\n"
+            "【選定基準 - Selection Criteria】\n"
+            "1. **社会的インパクト**: 仕事のやり方、生活、社会のルールを変えるようなニュースを最優先（例: ChatGPTの新機能、Googleの革命的発表）。\n"
+            "2. **実用性**: 「明日から自分の仕事や生活に使えるか？」を重視。マニアックな開発者向けツール（APIの微細な変更、ライブラリ更新など）は思い切って除外してください。\n"
+            "3. **トレンド**: 「今、世の中で何が起きているか」を把握できる大きな動き。\n\n"
+            "【執筆スタイル - Tone & Style】\n"
+            "・40代の知的な大人に向けた、落ち着いたプロフェッショナルな日本語。\n"
+            "・専門用語は噛み砕き、「なぜそれが凄いのか」「どう役に立つのか」という**意味（Implication）**を解説してください。\n\n"
+            "【出力フォーマット】\n"
+            "必ず以下の形式でトップ10を出力してください。\n\n"
+            "1. **キャッチーな見出し** (ツール名)\n"
+            "   概要: [何が起きたのか、簡潔に]\n"
+            "   💡 視点: [なぜこれが重要なのか？ビジネスや生活への影響は？]\n"
+            "\n"
+            "(以下、10位まで続ける)\n\n"
             "News List:\n"
-            f"{news_text[:30000]}" # Safety truncate
+            f"{news_text[:35000]}" # Increased limit slightly for context
         )
         
         response = model.generate_content(prompt)
