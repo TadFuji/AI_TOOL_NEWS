@@ -73,7 +73,6 @@ jobs:
       with:
         commit_message: "Bot Run Output [skip ci]"
         branch: main
-        file_pattern: 'docs/* reports/*'
         
     - name: 🚨 Notify Failure (Silent Watcher)
       if: failure()
