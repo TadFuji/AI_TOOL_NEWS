@@ -5,6 +5,10 @@ on:
     - cron: '0 * * * *'  # Run every 1 hour
   workflow_dispatch:      # Allow manual trigger
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

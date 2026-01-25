@@ -1,2 +1,2 @@
 requests==2.31.0
-tweepy
+tweepy==4.16.0

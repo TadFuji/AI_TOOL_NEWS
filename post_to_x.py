@@ -110,8 +110,17 @@ def main():
     # We focus on the latest reports to avoid posting old stuff if the script runs locally
     # But strictly speaking, the history file prevents duplicates mostly.
     # Let's check all reports but only post if not in history.
-    all_reports = glob.glob(os.path.join(REPORTS_DIR, "*", "*.md"))
+    # PERFORMANCE OPTIMIZATION: Only scan today and yesterday's reports.
+    # Scanning entire history (glob "*") becomes too slow over time.
+    yesterday_str = (datetime.datetime.now(JST) - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    target_dirs = [today_str, yesterday_str]
     
+    all_reports = []
+    for d in target_dirs:
+        day_path = os.path.join(REPORTS_DIR, d)
+        if os.path.exists(day_path):
+            all_reports.extend(glob.glob(os.path.join(day_path, "*.md")))
+
     new_items_count = 0
     
     for report_path in all_reports:
