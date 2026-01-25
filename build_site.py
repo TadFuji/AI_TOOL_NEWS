@@ -2,11 +2,13 @@ import os
 import re
 import datetime
 import glob
+import json
 from collections import defaultdict
 
 # Configuration
-REPORTS_DIR = "reports"
-DOCS_DIR = "docs"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REPORTS_DIR = os.path.join(BASE_DIR, "reports")
+DOCS_DIR = os.path.join(BASE_DIR, "docs")
 
 # Embedded HTML Template (Simple & Clean)
 HTML_HEADER = """
@@ -95,7 +97,23 @@ def parse_report_file(filepath):
         })
     return items
 
-def generate_html_from_items(items, title):
+def load_targets():
+    """Laws targets.json to map tool names to twitter handles."""
+    targets_path = os.path.join(BASE_DIR, "targets.json")
+    tool_map = {}
+    try:
+        with open(targets_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            # Flatten the list structure
+            for category in data:
+                for tool in category.get('tools', []):
+                    tool_map[tool['name']] = tool
+        return tool_map
+    except Exception as e:
+        print(f"Warning: Could not load targets.json: {e}")
+        return {}
+
+def generate_html_from_items(items, title, tool_map):
     """Generates full HTML page from a list of news items."""
     content_html = ""
     
@@ -105,11 +123,46 @@ def generate_html_from_items(items, title):
     
     current_date = None
     
+    # Regex for valid tweet URL (simple validation)
+    tweet_pattern = re.compile(r'https?://(www\.)?(twitter|x)\.com/[a-zA-Z0-9_]+/status/\d+')
+
     for item in items:
         # Date Header Grouping
         if item['date'] != current_date:
             current_date = item['date']
             content_html += f'<h2 class="category-title" style="margin-top:40px;">{current_date}</h2>'
+
+        # Resolve accounts for search fallback
+        # item['tool'] is the key in targets.json
+        accounts = tool_map.get(item['tool'], {}).get('accounts', [])
+        # Default to tool name if no account found (fallback)
+        primary_account = accounts[0] if accounts else item['tool'].replace(" ", "")
+        
+        search_query = f"from:{primary_account}"
+        search_url = f"https://x.com/search?q={search_query}&src=typed_query&f=live"
+
+        # Static Validation of Primary URL
+        valid_url = item['url']
+        is_suspicious = False
+        
+        if not tweet_pattern.match(valid_url):
+            is_suspicious = True
+            # If invalid/suspicious, we can strictly replace it OR just rely on the user.
+            # Decision: Keep the link but style it differently or just rely on fallback?
+            # User request: "Rewrite valid URL... if suspicious... to search result page"
+            # Let's replace it to be safe.
+            valid_url = search_url
+            
+        card_buttons = f"""
+            <div class="news-footer" style="display: flex; gap: 10px;">
+                <a href="{valid_url}" target="_blank" class="source-link">
+                    { 'View Post' if not is_suspicious else '⚠️ Search Result (Auto-fixed)' }
+                </a>
+                <a href="{search_url}" target="_blank" class="source-link" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);">
+                    🔍 Verify
+                </a>
+            </div>
+        """
 
         card = f"""
         <div class="news-card">
@@ -120,9 +173,7 @@ def generate_html_from_items(items, title):
                 <p><strong>{item['summary']}</strong></p>
                 <p style="margin-top: 10px; font-size: 0.9em; color: #aaa;"><i class="fas fa-info-circle"></i> {item['why']}</p>
             </div>
-            <div class="news-footer">
-                <a href="{item['url']}" target="_blank" class="source-link">View Post</a>
-            </div>
+            {card_buttons}
         </div>
         """
         content_html += card
@@ -135,6 +186,9 @@ def generate_html_from_items(items, title):
 def build():
     print("Starting build process...")
     
+    # Load targets for account mapping
+    tool_map = load_targets()
+
     # Grid search all reports
     all_reports = glob.glob(os.path.join(REPORTS_DIR, "*", "*.md"))
     
@@ -154,7 +208,7 @@ def build():
     
     latest_items = [i for i in all_items if i['date'] in latest_3_dates]
     
-    index_html = generate_html_from_items(latest_items, "Latest News (3 Days)")
+    index_html = generate_html_from_items(latest_items, "Latest News (3 Days)", tool_map)
     with open(os.path.join(DOCS_DIR, "index.html"), 'w', encoding='utf-8') as f:
         f.write(index_html)
     print("Generated index.html")
@@ -171,7 +225,7 @@ def build():
     
     for month, items in sorted(months.items(), reverse=True):
         filename = f"archive_{month}.html"
-        month_html = generate_html_from_items(items, f"Archive: {month}")
+        month_html = generate_html_from_items(items, f"Archive: {month}", tool_map)
         with open(os.path.join(DOCS_DIR, filename), 'w', encoding='utf-8') as f:
             f.write(month_html)
         print(f"Generated {filename}")
