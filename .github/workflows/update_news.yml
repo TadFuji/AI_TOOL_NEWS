@@ -2,12 +2,8 @@ name: Daily AI News Update
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Run every hour
-  workflow_dispatch:      # Allow manual trigger
-
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -31,7 +27,7 @@ jobs:
 
     - name: Run News Collection (Tools)
       env:
-        XAI_API_KEY: ${{ secrets.XAI_API_KEY }}  # Must be set in GitHub Settings
+        XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         X_CONSUMER_KEY: ${{ secrets.X_CONSUMER_KEY }}
         X_CONSUMER_SECRET: ${{ secrets.X_CONSUMER_SECRET }}
         X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
