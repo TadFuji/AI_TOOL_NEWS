@@ -32,7 +32,11 @@ def get_latest_report_items():
     for d in target_dirs:
         day_path = os.path.join(REPORTS_DIR, d)
         if os.path.exists(day_path):
+            # Tool Reports
             files = glob.glob(os.path.join(day_path, "*.md"))
+            # General News Reports
+            files.extend(glob.glob(os.path.join(day_path, "general_news", "*.md")))
+            
             for fpath in files:
                 items = parse_report_file(fpath)
                 all_items.extend(items)

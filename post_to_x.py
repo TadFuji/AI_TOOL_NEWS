@@ -120,10 +120,14 @@ def main():
     target_dirs = [today_str, yesterday_str]
     
     all_reports = []
+    all_reports = []
     for d in target_dirs:
         day_path = os.path.join(REPORTS_DIR, d)
         if os.path.exists(day_path):
+            # Tool Reports (Root of day folder)
             all_reports.extend(glob.glob(os.path.join(day_path, "*.md")))
+            # General News Reports (Subfolder)
+            all_reports.extend(glob.glob(os.path.join(day_path, "general_news", "*.md")))
 
     new_items_count = 0
     
