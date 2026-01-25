@@ -59,6 +59,12 @@ jobs:
       run: |
         python post_to_line.py
 
+    - name: Run Weekly Editor (Sunday Only)
+      env:
+        XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+      run: |
+        python generate_weekly_report.py
+
     - name: Build Website
       run: |
         python build_site.py
@@ -69,3 +75,11 @@ jobs:
         commit_message: "Automated News Update [skip ci]"
         branch: main
         file_pattern: 'docs/* reports/*'
+        
+    - name: 🚨 Notify Failure (Silent Watcher)
+      if: failure()
+      env:
+        LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+      run: |
+        python notify_failure.py

@@ -1,6 +1,18 @@
-requests==2.31.0
 tweepy==4.14.0
 python-dotenv
 line-bot-sdk
 feedparser
-python-dateutil>=3.0.0
+python-dateutil>=2.8.2
+
+# Marketing Engine (UI & Automation)
+streamlit>=1.30.0
+selenium>=4.16.0
+webdriver-manager>=4.0.0
+
+# Reports & Media
+edge-tts
+moviepy
+xhtml2pdf
+reportlab
+Pillow
+lxml
