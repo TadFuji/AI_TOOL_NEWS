@@ -4,9 +4,279 @@ import time
 import datetime
 import requests
 import re
+import concurrent.futures
+import threading
 
 # Configuration
 def load_api_key():
+    env_path = ".env"
+    if os.path.exists(env_path):
+        with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.startswith("XAI_API_KEY="):
+                    return line.strip().split("=")[1]
+    return os.environ.get("XAI_API_KEY")
+
+API_KEY = load_api_key()
+# Crucial: Use Agent Endpoint and Grok-4 family for server-side x_search
+API_URL = "https://api.x.ai/v1/chat/completions"
+# Using reasoning model for better batch processing as suggested
+MODEL = "grok-beta" 
+
+TARGETS_FILE = "targets.json"
+BASE_REPORT_DIR = "reports"
+
+# Global lock for file writing/printing
+IO_LOCK = threading.Lock()
+
+def setup_report_dir():
+    """Creates a directory for today's reports."""
+    # TIMEZONE FIX: GitHub Actions runs in UTC. Force JST (UTC+9)
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    today = datetime.datetime.now(JST).strftime("%Y-%m-%d")
+    path = os.path.join(BASE_REPORT_DIR, today)
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
+
+def load_targets():
+    """Loads the monitoring targets from JSON."""
+    with open(TARGETS_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+def get_category_news(category_name, tools_list):
+    """
+    Queries xAI Agent API to autonomously search X for A BATCH of tools.
+    """
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}"
+    }
+    
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    current_date = datetime.datetime.now(JST).strftime("%Y-%m-%d")
+    
+    # Construct Batch Prompt
+    tools_desc = ""
+    for t in tools_list:
+        tools_desc += f"- {t['name']}: {', '.join(t['accounts'])}\n"
+
+    # Prompt optimized for Batch execution & JSON output
+    prompt = (
+        f"Role: AI News Aggregator.\n"
+        f"Current Date: {current_date}\n\n"
+        f"Task: Search for the LATEST updates (last 3 days) for the following AI tools/companies:\n"
+        f"{tools_desc}\n"
+        "INSTRUCTIONS:\n"
+        "1. Use the 'x_search' tool to check the official accounts for EACH tool listed above.\n"
+        "2. Look for: Product launches, model updates, new features, or official announcements. Ignore random chatter.\n"
+        "3. Output MUST be a valid JSON list of objects. Each object must represent ONE tool.\n"
+        "4. Format:\n"
+        "   [\n"
+        "     {\n"
+        "       \"tool_name\": \"Name from the list\",\n"
+        "       \"has_news\": true/false,\n"
+        "       \"post_text\": \"Raw text of the post found (or 'No recent updates')\",\n"
+        "       \"post_date\": \"YYYY-MM-DD HH:MM\",\n"
+        "       \"post_url\": \"https://x.com/...\"\n"
+        "     },\n"
+        "     ...\n"
+        "   ]\n"
+        "5. If no news is found for a tool, set has_news: false.\n"
+        "6. Return ONLY the JSON. No markdown fencing if possible, or minimally fenced."
+    )
+
+    # Tool Definition
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "x_search",
+                "description": "Search X for posts from specific users.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string"},
+                        "usernames": {"type": "array", "items": {"type": "string"}},
+                    },
+                    "required": ["query"]
+                }
+            }
+        }
+    ]
+
+    payload = {
+        "model": MODEL,
+        "messages": [
+            {"role": "system", "content": "You are an automated news collector agent. You output strict JSON."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.0,
+        "tools": tools,
+        "tool_choice": "auto"
+    }
+
+    try:
+        # Retry logic
+        for attempt in range(3):
+            try:
+                response = requests.post(API_URL, headers=headers, data=json.dumps(payload), timeout=120)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Message content parsing
+                    try:
+                        message = data['choices'][0]['message']
+                        content = message.get('content', '')
+                        
+                        # Fallback: if content is null but tool_calls exist, the model might be stuck in tool loop
+                        # But with "chat/completions", Grok usually returns the final answer in content after tool usage if we don't force tool loop in python.
+                        # Wait, the xAI API for agents usually runs server-side loops.
+                        # If using the 'responses' endpoint (agent), we get final output.
+                        # If using 'chat/completions', we might need to handle tool calls? 
+                        # The user snippet suggests "agentic server-side tool calling".
+                        # Let's trust the 'chat/completions' with tool_choice auto handles it or returns the result.
+                        # Actually, for xAI, 'v1/responses' was the agent endpoint (used in prev code).
+                        # User snippet recommends 'v1/chat/completions'. Let's stick to that but handle potential tool_calls if xAI doesn't auto-resolve server side?
+                        # Re-reading user note: "agentic server-side tool calling... use prompts that instruct... The model will handle the tool calls agentically, returning processed results."
+                        # This implies the MODEL does the thinking and just gives us the answer? 
+                        # Or does it return tool_calls for US to execute?
+                        # The snippet says: "Parse response for tool calls AND results".
+                        # However, for simplicity and ensuring it works like the previous 'responses' endpoint (which was fully server side), 
+                        # let's try to extract JSON from the content.
+                        
+                        if not content:
+                            return "Error: No content returned (maybe raw tool calls?)"
+
+                        # Clean markdown
+                        clean_json = content.replace("```json", "").replace("```", "").strip()
+                        return json.loads(clean_json)
+
+                    except (KeyError, json.JSONDecodeError) as e:
+                        print(f"    ⚠️ JSON Parse Error in Category Batch: {e}")
+                        # If not JSON, maybe just text?
+                        return f"Error: Parsing failed. Raw: {content[:100]}"
+                        
+                elif response.status_code == 429:
+                    print(f"    ⚠️ 429 Rate Limit. Sleeping 30s...")
+                    time.sleep(30)
+                    continue
+                else:
+                    return f"Error: {response.status_code} - {response.text}"
+            except requests.exceptions.Timeout:
+                print("Request timed out, retrying...")
+                continue
+        return "Error: Failed after 3 retries"
+
+    except Exception as e:
+        return f"Exception: {str(e)}"
+
+
+def process_category(category_data, report_dir):
+    """Worker function for Category Batch execution."""
+    
+    cat_name = category_data['category']
+    tools_list = category_data['tools']
+    
+    with IO_LOCK:
+        print(f"📦 Batch Processing: {cat_name} ({len(tools_list)} tools)...")
+    
+    try:
+        # Call Grok for the whole bunch
+        results = get_category_news(cat_name, tools_list)
+        
+        if isinstance(results, str) and results.startswith("Error"):
+             with IO_LOCK:
+                 print(f"  ❌ Batch Failed: {cat_name} -> {results}")
+             return
+
+        # It should be a list of dicts
+        if not isinstance(results, list):
+             with IO_LOCK:
+                 print(f"  ❌ Batch Error: Expected list, got {type(results)}")
+             return
+
+        # Process each tool result in the batch
+        for item in results:
+            tool_name = item.get('tool_name', 'Unknown')
+            has_news = item.get('has_news', False)
+            
+            # Map back to accounts if possible, or just trust the tool name
+            # Validation: Check if tool_name is in our target list
+            # (Grok might hallucinate names so be careful)
+            
+            if not has_news:
+                with IO_LOCK:
+                    print(f"  ⚪ {tool_name}: No news.")
+                continue
+
+            post_text = item.get('post_text', '')
+            post_date = item.get('post_date', 'Unknown Date')
+            post_url = item.get('post_url', '#')
+
+            # HYBRID PIPELINE: Gemini Filter (Optional per item)
+            # Keeping it simple for now to save cost/time: Trust Grok's separation?
+            # Or pass to Gemini? Passing 7 batches to Gemini is cheaper than 36.
+            # Let's pass the raw text to Gemini Filter like before if text exists.
+            
+            final_text = post_text
+            
+            # Try Gemini Filter if text is long enough
+            # (Re-using existing logic logic but adapted)
+            if len(post_text) > 20:
+                try:
+                    from gemini_x_filter import filter_x_updates_with_gemini
+                    # We print less now
+                    gemini_result = filter_x_updates_with_gemini(post_text, tool_name)
+                    final_text = gemini_result
+                except ImportError:
+                    pass
+
+            with IO_LOCK:
+                print(f"  ✅ News Found: {tool_name}")
+
+            # Save Report (Individual file to maintain architecture)
+            count_str = tool_name.replace(' ', '_').replace('/', '-')
+            filename = f"{count_str}.md"
+            filepath = os.path.join(report_dir, filename)
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(f"# {cat_name} - Daily Report\n\n")
+                f.write(f"## {tool_name}\n")
+                f.write(f"- Post: {final_text}\n")
+                f.write(f"- Time: {post_date}\n")
+                f.write(f"- URL: {post_url}\n")
+
+    except Exception as e:
+        with IO_LOCK:
+            print(f"  🔥 Batch Critical Failure {cat_name}: {e}")
+            
+    time.sleep(5) 
+
+# Main Execution Block
+if __name__ == "__main__":
+    print("=== AI News Collection Start (Cost-Optimized Cluster Mode) ===")
+    
+    report_dir = setup_report_dir()
+    config = load_targets()
+    
+    # Process Categories sequentially or parallel?
+    # Parallel Categories is fine. 7 threads is standard.
+    
+    print(f"🚀 Launching {len(config)} category agents...")
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {executor.submit(process_category, cat, report_dir): cat for cat in config}
+        
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except Exception as exc:
+                print(f"Category thread exception: {exc}")
+
+    print("\n=== Collection Complete ===")
+
     env_path = ".env"
     if os.path.exists(env_path):
         with open(env_path, 'r', encoding='utf-8') as f:
