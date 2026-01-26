@@ -1,12 +1,8 @@
 # 6. Creative - Daily Report
 
 ## Runway
-- **Date**: 2026-01-23 14:13
-- **URL**: https://x.com/runwayml/status/2014703073281691948
-- **Summary**: Runway Gen-4.5とNano Banana Proがリリース。画像から映画のような映像制作が可能に。有料プランで利用可能。
-- **Why**: 一枚の画像から、カメラ制御やキャラの一貫性を保ちつつ、より長く、より複雑な映像ストーリーを構築できる。
+- Post: Learn how to go from a single image to a fully realized cinematic universe with Runway Gen-4.5 and Nano Banana Pro. Available now for all paid Runway plans. For a limited time get 15% off.
+- Time: 2026-01-23 14:13
+- URL: https://x.com/runwayml/status/2014703073281691948
 
-- **Date**: 2026-01-21 21:39
-- **URL**: https://x.com/runwayml/status/2014090404769976744
-- **Summary**: Gen-4.5に画像から動画を生成する機能が追加。より長いストーリー、正確なカメラ制御、一貫性のある物語をサポート。
-- **Why**: 画像を元に、カメラワークやキャラクタ一の一貫性を保ちながら、表現力豊かな動画を生成でき、映像制作の幅が広がる。
+No recent posts

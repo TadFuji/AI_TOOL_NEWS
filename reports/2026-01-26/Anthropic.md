@@ -1,7 +1,10 @@
 # 4. Key AI Companies - Daily Report
 
 ## Anthropic
-- **Date**: 2024-05-03 00:00
-- **URL**: 
-- **Summary**: オープンソースの自動アライメント監査ツールPetriが2.0にアップデート。評価認識への対策と機能拡張。
-- **Why**: AI開発者がモデルの安全性をより詳細に評価し、潜在的な問題を早期に発見できるようになる。
+- Post: New on the Anthropic Engineering Blog: We give prospective performance engineering candidates a notoriously difficult take-home exam. It worked well—until Opus 4.5 beat it. 
+
+Here's how we designed (and redesigned) it: https://www.anthropic.com/engineering/AI-resistant-technical-evaluations
+- Time: 2026-01-22 01:09
+- URL: https://x.com/AnthropicAI/status/2014143403144200234
+
+- Post: We're also
