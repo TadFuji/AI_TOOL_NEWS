@@ -53,19 +53,20 @@ def get_ai_news(tool_name, accounts):
     
     # Prompt optimized for Agentic execution
     prompt = (
-        f"Role: Expert AI News Reporter using real-time X data.\n"
-        f"Task: Search for the LATEST significant updates from {accounts_str} within the last 3 days.\n"
+        f"Role: Expert AI Tool Analyst using real-time X data.\n"
+        f"Task: Search for the LATEST functional updates from {accounts_str} within the last 3 days.\n"
         f"Current Date: {current_date}\n\n"
-        "STEPS:\n"
-        "1. USE x_search to find posts from these accounts.\n"
-        "2. FILTER for: New Models, Feature Launches, API Updates, or Strategic Partnerships.\n"
-        "3. IGNORE: Replies, memes, maintenance, or generic hype.\n"
-        "4. OUTPUT: If valid news is found, output in this format:\n"
+        "CRITERIA (Strictly Tool-Focused):\n"
+        "1. MUST INCLUDE: New Models, New Features, Version Updates, Performance Improvements, or Service Outages/Bugs.\n"
+        "2. MUST EXCLUDE: Funding rounds, Stock prices, Acquisitions, or purely Business/Financial news.\n"
+        "3. IGNORE: Generic marketing hype, memes, or non-functional philosophical posts.\n"
+        "4. PRIORITY: If a major tool update (e.g., new model) is found, prioritize it. If only minor updates exist, report them rather than silence.\n\n"
+        "OUTPUT FORMAT (If valid tool news is found):\n"
         "- **Date**: YYYY-MM-DD HH:MM (Important: Include specific time from the post)\n"
         "- **URL**: (The specific tweet URL found via search)\n"
-        "- **Summary**: (Concise Japanese summary)\n"
-        "- **Why**: (Impact analysis)\n"
-        "If NO significant news is found, output exactly: 'No significant news found'."
+        "- **Summary**: (Concise Japanese summary of the FUNCTIONAL change)\n"
+        "- **Why**: (How this affects the user's workflow or capabilities)\n"
+        "If NO functional tool news is found, output exactly: 'No significant news found'."
     )
 
     # Native Tool Definition for Server-Side Execution
