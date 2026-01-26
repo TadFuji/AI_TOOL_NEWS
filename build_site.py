@@ -71,7 +71,7 @@ def parse_report_file(filepath):
             continue
 
         # Parse Date if available, else use file date
-        date_match = re.search(r'(?:- )?\*\*Date\*\*:? (.*)', body_text)
+        date_match = re.search(r'(?:- )?(?:\*\*Date\*\*|Time):? (.*)', body_text)
         item_date_raw = date_match.group(1).strip() if date_match else "Unknown Date"
         
         # Parse Date for Display (YYYY年MM月DD日 HH時MM分)
@@ -101,14 +101,16 @@ def parse_report_file(filepath):
              match = re.search(r'(\d{4}-\d{2}-\d{2})', item_date_raw)
              if match:
                  item_date = match.group(1)
-             else:
+             elif item_date_raw != "Unknown Date":
                  item_date = item_date_raw[:10]
+             else:
+                 item_date = "Unknown Date"
         
         
         
-        url_match = re.search(r'(?:- )?\*\*URL\*\*:? (.*)', body_text)
-        summary_match = re.search(r'(?:- )?\*\*Summary\*\*:? (.*)', body_text)
-        why_match = re.search(r'(?:- )?\*\*Why\*\*:? (.*)', body_text)
+        url_match = re.search(r'(?:- )?(?:\*\*URL\*\*|URL):? (.*)', body_text)
+        summary_match = re.search(r'(?:- )?(?:\*\*Summary\*\*:?|Post:?) (.*)', body_text)
+        why_match = re.search(r'(?:- )?(?:\*\*Why\*\*|Why):? (.*)', body_text)
         
         url = url_match.group(1).strip() if url_match else "#"
         
