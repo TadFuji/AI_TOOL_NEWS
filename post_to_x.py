@@ -126,8 +126,7 @@ def main():
         if os.path.exists(day_path):
             # Tool Reports (Root of day folder)
             all_reports.extend(glob.glob(os.path.join(day_path, "*.md")))
-            # General News Reports (Subfolder)
-            all_reports.extend(glob.glob(os.path.join(day_path, "general_news", "*.md")))
+
 
     new_items_count = 0
     

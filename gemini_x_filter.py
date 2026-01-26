@@ -52,7 +52,7 @@ If NO functional news is found, output exactly: 'No significant news found'.
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp", 
+            model="gemini-3-flash-preview", 
             contents=prompt
         )
         return response.text.strip()
