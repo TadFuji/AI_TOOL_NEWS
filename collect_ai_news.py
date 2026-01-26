@@ -20,8 +20,8 @@ def load_api_key():
 API_KEY = load_api_key()
 # Crucial: Use Agent Endpoint and Grok-4 family for server-side x_search
 API_URL = "https://api.x.ai/v1/chat/completions"
-# Using reasoning model for better batch processing as suggested
-MODEL = "grok-beta" 
+# Using grok-2-vision-1212 for confirmed low cost usage ($0.20/$0.50) as of Jan 2026
+MODEL = "grok-2-vision-1212" 
 
 TARGETS_FILE = "targets.json"
 BASE_REPORT_DIR = "reports"
