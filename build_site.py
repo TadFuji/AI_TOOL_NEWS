@@ -79,15 +79,31 @@ def parse_report_file(filepath):
         sort_date = item_date_raw
         
         try:
-            dt = parser.parse(item_date_raw)
+            # Clean string common artifacts like (GMT), (UTC)
+            clean_date = re.sub(r'\(?(GMT|UTC)\)?', '', item_date_raw).strip()
+            dt = parser.parse(clean_date)
+            
+            # Assume UTC if naive (Grok usually reports UTC/GMT)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=datetime.timezone.utc)
+            
+            # Convert to JST (UTC+9)
+            jst = datetime.timezone(datetime.timedelta(hours=9))
+            dt_jst = dt.astimezone(jst)
+            
             # Format: 2026年01月25日 18時07分
-            display_date = dt.strftime("%Y年%m月%d日 %H時%M分")
-            sort_date = dt.strftime("%Y-%m-%d %H:%M") # ISO for sorting
-            # Grouping key (Day only)
-            item_date = dt.strftime("%Y-%m-%d")
-        except:
-             # Fallback if parsing fails (keep original string)
-             item_date = item_date_raw[:10] # Try to keep YYYY-MM-DD for grouping
+            display_date = dt_jst.strftime("%Y年%m月%d日 %H時%M分")
+            sort_date = dt_jst.strftime("%Y-%m-%d %H:%M") # ISO for sorting
+            # Grouping key (Day only, JST based)
+            item_date = dt_jst.strftime("%Y-%m-%d")
+        except Exception as e:
+             # Fallback: keep raw, but use regex to extract YYYY-MM-DD for grouping if possible
+             match = re.search(r'(\d{4}-\d{2}-\d{2})', item_date_raw)
+             if match:
+                 item_date = match.group(1)
+             else:
+                 item_date = item_date_raw[:10]
+        
         
         
         url_match = re.search(r'(?:- )?\*\*URL\*\*:? (.*)', body_text)
