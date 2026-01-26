@@ -53,20 +53,17 @@ def get_ai_news(tool_name, accounts):
     
     # Prompt optimized for Agentic execution
     prompt = (
-        f"Role: Expert AI Tool Analyst using real-time X data.\n"
-        f"Task: Search for the LATEST functional updates from {accounts_str} within the last 3 days.\n"
+        f"Role: Raw Data Collector.\n"
+        f"Task: Extract the text, timestamp, and URL of ALL recent posts from {accounts_str} within the last 3 days.\n"
         f"Current Date: {current_date}\n\n"
-        "CRITERIA (Strictly Tool-Focused):\n"
-        "1. MUST INCLUDE: New Models, New Features, Version Updates, Performance Improvements, or Service Outages/Bugs.\n"
-        "2. MUST EXCLUDE: Funding rounds, Stock prices, Acquisitions, or purely Business/Financial news.\n"
-        "3. IGNORE: Generic marketing hype, memes, or non-functional philosophical posts.\n"
-        "4. PRIORITY: If a major tool update (e.g., new model) is found, prioritize it. If only minor updates exist, report them rather than silence.\n\n"
-        "OUTPUT FORMAT (If valid tool news is found):\n"
-        "- **Date**: YYYY-MM-DD HH:MM (Important: Include specific time from the post)\n"
-        "- **URL**: (The specific tweet URL found via search)\n"
-        "- **Summary**: (Concise Japanese summary of the FUNCTIONAL change)\n"
-        "- **Why**: (How this affects the user's workflow or capabilities)\n"
-        "If NO functional tool news is found, output exactly: 'No significant news found'."
+        "INSTRUCTIONS:\n"
+        "1. Do NOT filter or summarize. I need the raw data.\n"
+        "2. For each post found, output a line in this specific format:\n"
+        "   - Post: [Text of the post]\n"
+        "   - Time: [YYYY-MM-DD HH:MM]\n"
+        "   - URL: [https://x.com/...]\n\n"
+        "3. Include EVERYTHING found (features, funding, random thoughts). Filtering will be done downstream.\n"
+        "4. If absolutely nothing is found, say 'No recent posts'."
     )
 
     # Native Tool Definition for Server-Side Execution
@@ -101,10 +98,21 @@ def get_ai_news(tool_name, accounts):
                             # CLEANING: Remove Grok's citation markers [[1]](url) or just [[1]]
                             # Use regex to strip pattern content
                             clean_text = re.sub(r'\[\[\d+\]\](?:\([^)]+\))?', '', full_text)
-                            return clean_text.strip()
+                            
+                            # HYBRID PIPELINE START: Pass Raw Grok Output to Gemini
+                            try:
+                                from gemini_x_filter import filter_x_updates_with_gemini
+                                print(f"    ... Sending {len(clean_text)} chars to Gemini for analysis ...")
+                                gemini_result = filter_x_updates_with_gemini(clean_text, tool_name)
+                                return gemini_result
+                            except ImportError:
+                                print("    ⚠️ Warning: gemini_x_filter not found, falling back to Grok raw output.")
+                                return clean_text.strip()
+                            # HYBRID PIPELINE END
                     return "Error: No text content in agent response."
                 elif response.status_code == 429:
-                    time.sleep(5) # Wait for rate limit
+                    print(f"    ⚠️ 429 Rate Limit. Sleeping 30s...")
+                    time.sleep(30) # Wait for rate limit
                     continue
                 else:
                     return f"Error: {response.status_code} - {response.text}"
@@ -122,7 +130,7 @@ import threading
 
 # Circuit Breaker Globals
 FAILURE_COUNTER = 0
-FAILURE_THRESHOLD = 5
+FAILURE_THRESHOLD = 20
 FAILURE_LOCK = threading.Lock()
 
 def process_tool(category_name, tool, report_dir):
@@ -144,7 +152,7 @@ def process_tool(category_name, tool, report_dir):
         
         # Success Logic
         if "Error:" in news_content or not news_content.strip():
-             print(f"  ❌ {name}: Failed/Empty")
+             print(f"  ❌ {name}: Failed/Empty. Content: {news_content[:100]}...")
              with FAILURE_LOCK:
                  FAILURE_COUNTER += 1
         elif "No significant news found" in news_content:
@@ -176,7 +184,7 @@ def process_tool(category_name, tool, report_dir):
         with FAILURE_LOCK:
              FAILURE_COUNTER += 1
              
-    time.sleep(1) # Jitter for API kindness
+    time.sleep(5) # Jitter for API kindness
 
 # Main Execution Block
 if __name__ == "__main__":
@@ -198,7 +206,7 @@ if __name__ == "__main__":
     print(f"🚀 Launching {total_tasks} agents with max_workers=3...")
 
     # Parallel Execution
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         futures = {executor.submit(process_tool, t['category'], t['tool'], report_dir): t for t in tasks}
         
         for future in concurrent.futures.as_completed(futures):
