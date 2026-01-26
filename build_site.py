@@ -67,71 +67,116 @@ def parse_report_file(filepath):
         tool_name = lines[0].strip()
         body_text = "\n".join(lines[1:]).strip()
 
-        if "Updates not found" in body_text or "No significant news" in body_text or body_text.strip() == "":
+        # Check for empty report immediately
+        if "No recent posts" in body_text or "Updates not found" in body_text or body_text.strip() == "":
             continue
 
-        # Parse Date if available, else use file date
-        date_match = re.search(r'(?:- )?(?:\*\*Date\*\*|Time):? (.*)', body_text)
-        item_date_raw = date_match.group(1).strip() if date_match else "Unknown Date"
+        # Split by "- Post:" to support multiple posts per tool
+        # Adding a lookahead or just splitting and filtering empty chunks
+        # The markdown format usually is "- Post: ... \n - Time: ... "
+        # We start by splitting by correct marker.
+        # Note: The first post might start immediately or after some newlines.
         
-        # Parse Date for Display (YYYY年MM月DD日 HH時MM分)
-        display_date = item_date_raw
-        sort_date = item_date_raw
+        # Normalize body text (ensure it starts with - Post if it's there)
+        # But sometimes it might just be text.
         
-        try:
-            # Clean string common artifacts like (GMT), (UTC)
-            clean_date = re.sub(r'\(?(GMT|UTC)\)?', '', item_date_raw).strip()
-            dt = parser.parse(clean_date)
+        # Strategy: Find all occurrences of "- Post:" and their indices
+        # If no "- Post:" found, treat whole body as one item (legacy)
+        
+        post_blocks = []
+        if "- Post:" in body_text:
+            # Split by - Post:, but keep the delimiter or prepend it back
+            # re.split with capturing group creates chunks: [pre, - Post:, content, - Post:, content...]
+            # Simpler: raw string split
+            raw_chunks = body_text.split("- Post:")
             
-            # Assume UTC if naive (Grok usually reports UTC/GMT)
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=datetime.timezone.utc)
+            # First chunk is usually empty or headers, unless file doesn't start with - Post:
+            # If body_text starts with "- Post:", raw_chunks[0] is empty.
             
-            # Convert to JST (UTC+9)
-            jst = datetime.timezone(datetime.timedelta(hours=9))
-            dt_jst = dt.astimezone(jst)
-            
-            # Format: 2026年01月25日 18時07分
-            display_date = dt_jst.strftime("%Y年%m月%d日 %H時%M分")
-            sort_date = dt_jst.strftime("%Y-%m-%d %H:%M") # ISO for sorting
-            # Grouping key (Day only, JST based)
-            item_date = dt_jst.strftime("%Y-%m-%d")
-        except Exception as e:
-             # Fallback: keep raw, but use regex to extract YYYY-MM-DD for grouping if possible
-             match = re.search(r'(\d{4}-\d{2}-\d{2})', item_date_raw)
-             if match:
-                 item_date = match.group(1)
-             elif item_date_raw != "Unknown Date":
-                 item_date = item_date_raw[:10]
-             else:
-                 item_date = "Unknown Date"
-        
-        
-        
-        url_match = re.search(r'(?:- )?(?:\*\*URL\*\*|URL):? (.*)', body_text)
-        summary_match = re.search(r'(?:- )?(?:\*\*Summary\*\*:?|Post:?) (.*)', body_text)
-        why_match = re.search(r'(?:- )?(?:\*\*Why\*\*|Why):? (.*)', body_text)
-        
-        url = url_match.group(1).strip() if url_match else "#"
-        
-        if summary_match:
-            summary = summary_match.group(1).strip().replace("**", "")
+            for chunk in raw_chunks:
+                if not chunk.strip(): continue
+                # We stripped "- Post:", so add it back to make regex work or adjust regex
+                post_blocks.append(chunk.strip())
         else:
-            summary = body_text.replace("\n", "<br>")
-            
-        why = why_match.group(1).strip() if why_match else "Check details."
+            post_blocks = [body_text]
 
-        items.append({
-            "date": item_date, # For grouping (YYYY-MM-DD)
-            "sort_date": sort_date, # For sorting (YYYY-MM-DD HH:MM)
-            "display_date": display_date, # For UI (Japanese)
-            "category": category,
-            "tool": tool_name,
-            "summary": summary,
-            "why": why,
-            "url": url,
-            "raw_text": body_text
-        })
+        for block in post_blocks:
+            # If we split by "- Post:", the block content starts immediately with the post text content (or "Summary")
+            # The regex needs to handle "Summary" starting logically at start of string
+            
+            # Parse Date
+            # Support multiple formats: "**Date**: ...", "Time: ...", "- Time: ..."
+            date_match = re.search(r'(?:- )?(?:\*\*Date\*\*|Time):? (.*)', block)
+            item_date_raw = date_match.group(1).strip() if date_match else "Unknown Date"
+            
+            # Skip if unknown date and it looks empty (double check)
+            if item_date_raw == "Unknown Date" and len(block) < 20: 
+                continue
+
+            # Parse URL
+            url_match = re.search(r'(?:- )?(?:\*\*URL\*\*|URL):? (.*)', block)
+            url = url_match.group(1).strip() if url_match else "#"
+            
+            # Parse Summary/Post Text
+            # It's everything before Time/URL usually.
+            # Regex: Start of block until Time or URL
+            # Or just take the lines valid.
+            
+            # If we split by "- Post:", block is just the content.
+            # But we need to exclude metadata lines (Time:, URL:) from summary
+            
+            summary_lines = []
+            for line in block.split('\n'):
+                if re.match(r'(?:- )?(?:\*\*Date\*\*|Time):', line): continue
+                if re.match(r'(?:- )?(?:\*\*URL\*\*|URL):', line): continue
+                if re.match(r'(?:- )?(?:\*\*Summary\*\*|Post):', line): continue # In case it was left over
+                summary_lines.append(line)
+            
+            summary = "\n".join(summary_lines).strip()
+            # Clean up ** wrappers if present from old parsing
+            summary = summary.replace("**Post**", "").strip()
+            if summary.startswith(":"): summary = summary[1:].strip()
+            
+            summary = summary.replace("\n", "<br>")
+
+            why = "Check details." # Default why
+
+            # Date Processing
+            display_date = item_date_raw
+            sort_date = item_date_raw
+            item_date = "Unknown Date"
+
+            try:
+                clean_date = re.sub(r'\(?(GMT|UTC)\)?', '', item_date_raw).strip()
+                dt = parser.parse(clean_date)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=datetime.timezone.utc)
+                jst = datetime.timezone(datetime.timedelta(hours=9))
+                dt_jst = dt.astimezone(jst)
+                
+                display_date = dt_jst.strftime("%Y年%m月%d日 %H時%M分")
+                sort_date = dt_jst.strftime("%Y-%m-%d %H:%M")
+                item_date = dt_jst.strftime("%Y-%m-%d")
+            except:
+                 # Fallback regex
+                 match = re.search(r'(\d{4}-\d{2}-\d{2})', item_date_raw)
+                 if match:
+                     item_date = match.group(1)
+                 elif item_date_raw != "Unknown Date" and len(item_date_raw) >= 10:
+                     item_date = item_date_raw[:10]
+            
+            items.append({
+                "date": item_date,
+                "sort_date": sort_date,
+                "display_date": display_date,
+                "category": category,
+                "tool": tool_name,
+                "summary": summary,
+                "why": why,
+                "url": url,
+                "raw_text": block
+            })
+
     return items
 
 def load_targets():
