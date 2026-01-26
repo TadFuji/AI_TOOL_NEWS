@@ -20,6 +20,21 @@ AI TOOL NEWS is a fully automated system that monitors official X (Twitter) acco
 - **Glassmorphism Design**: Features a modern, responsive UI with animated backgrounds and blurred glass cards.
 - **Secure**: API keys are isolated in `.env` and strictly excluded from Git history.
 
+## 🚧 Project Boundaries & Architecture
+
+The user operates two distinct AI news systems. It is critical to maintain the separation of concerns between them.
+
+| System | **AI_TOOL_NEWS** (This Project) | **ai-news-bot** (External Project) |
+| :--- | :--- | :--- |
+| **Primary Goal** | Real-time monitoring of specific AI Tool vendors on X. | Daily digest of general AI industry news via RSS. |
+| **Data Source** | **Official X Accounts** (e.g., @OpenAI, @xAI) | **RSS Feeds** (TechCrunch, The Verge, Blogs) |
+| **Frequency** | **Hourly** (Run via GitHub Actions) | **Daily** (07:00 AM JST) |
+| **Output Channels** | Website, X Account (Immediate updates) | LINE, Website, X Account (Daily Summary) |
+| **Content Tone** | **Gentle, Polite Japanese** (Automatic Translation) | Standard News Summary |
+| **Location** | `~/Desktop/Antigravity/AI_TOOL_NEWS` | `~/Desktop/Antigravity/ai-news-bot` |
+
+**DO NOT** mix RSS collection or LINE notification logic into this repository. This repository is strictly for **X-based real-time updates**.
+
 ## 🛠️ Installation & Usage
 
 ### Prerequisites
