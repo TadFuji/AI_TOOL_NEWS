@@ -1,7 +1,5 @@
+requests
 tweepy==4.14.0
 python-dotenv
-line-bot-sdk
-feedparser
 python-dateutil>=2.8.2
-google-generativeai
-requests
+google-genai

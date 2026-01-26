@@ -50,11 +50,7 @@ jobs:
 
 
 
-    - name: Run Weekly Editor (Sunday Only)
-      env:
-        XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
-      run: |
-        python generate_weekly_report.py
+
 
     - name: Build Website
       run: |

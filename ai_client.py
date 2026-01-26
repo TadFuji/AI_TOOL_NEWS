@@ -2,7 +2,7 @@ import os
 import json
 import datetime
 from google import genai
-from config import NEWS_BOT_OUTPUT_DIR
+
 from dotenv import load_dotenv
 
 load_dotenv()
