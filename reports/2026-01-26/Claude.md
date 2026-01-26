@@ -29,4 +29,6 @@
 - Time: 2026-01-23 00:08
 - URL: https://x.com/AnthropicAI/status/2014490504415871456
 
-- Post: Since
+- Post: Since release, Petri, our open-source tool for automated alignment audits, has been adopted by research groups and trialed by other AI developers. We're now releasing Petri 2.0, with improvements to counter eval-awareness and expanded seeds covering a wider range of behaviors.
+- Time: 2026-01-23 00:08
+- URL: https://x.com/AnthropicAI/status/2014490502805311959

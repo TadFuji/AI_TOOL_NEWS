@@ -5,4 +5,6 @@
 - Time: 2026-01-23 06:17
 - URL: https://x.com/Hailuo_AI/status/2014583159703404719
 
-No recent posts.
+- Post: Appreciate the shoutout!🫶 Top-tier anime styling ➕ natural physics ➡️ Your next viral animation, powered by #Hailuo🚀
+- Time: 2026-01-22 05:04
+- URL: https://x.com/Hailuo_AI/status/2014202362030924053
