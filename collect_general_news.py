@@ -59,10 +59,10 @@ def collect_from_rss():
     JST = datetime.timezone(datetime.timedelta(hours=9))
     now_jst = datetime.datetime.now(JST)
     
-    # User Request: General News is collected ONCE per day at 7:00 AM
-    if now_jst.hour != 7:
-        print("🕒 Not 7:00 AM JST. Skipping General News (RSS) collection.")
-        return
+    # User Request: Allow manual run anytime. 7 AM check removed for now.
+    # if now_jst.hour != 7:
+    #     print("🕒 Not 7:00 AM JST. Skipping General News (RSS) collection.")
+    #     return
 
     print("=== General AI News Collection (RSS) Start ===")
     
@@ -71,7 +71,8 @@ def collect_from_rss():
     now = datetime.datetime.now(JST)
     cutoff = now - datetime.timedelta(hours=24) # Collect within last 24 hours
     
-    count = 0
+    all_articles = []
+    seen_links = set()
     
     for feed_info in RSS_FEEDS:
         print(f"📡 Checking {feed_info['name']}...")
@@ -95,20 +96,14 @@ def collect_from_rss():
                     except:
                         pass
                 
-                # Check if new enough (within 24h)
-                # Note: Rough comparison as timezone handling in RSS varies
                 if not parsed_date:
-                    continue # Skip undated
-                
-                # Normalize to UTC for comparison if needed, or just lazy check
-                # Simple Logic: If parsed_date > cutoff
-                # (Handling TZ awareness issue requires care)
+                    continue 
+
+                # Simple Recency Check
                 try:
                     if parsed_date < cutoff:
                         continue 
                 except:
-                    # If comparison fails due to TZ offset mismatch, blindly accept recent items 
-                    # from known feeds usually works, but safe to skip to avoid noise.
                     pass
 
                 # 2. Keyword Check
@@ -116,28 +111,60 @@ def collect_from_rss():
                 summary = entry.summary if hasattr(entry, "summary") else ""
                 link = entry.link if hasattr(entry, "link") else ""
                 
+                if link in seen_links: continue
+                seen_links.add(link)
+                
                 if not is_ai_news(title, summary):
                     continue
 
-                # 3. Save Report
-                count += 1
-                safe_title = "".join([c if c.isalnum() else "_" for c in title])[:50]
-                filename = f"GEN_{count}_{safe_title}.md"
-                filepath = os.path.join(report_dir, filename)
-                
-                with open(filepath, 'w', encoding='utf-8') as f:
-                    f.write(f"# {title}\n\n")
-                    f.write(f"- **Source**: {feed_info['name']}\n")
-                    f.write(f"- **Date**: {parsed_date}\n")
-                    f.write(f"- **URL**: {link}\n\n")
-                    f.write(f"## Summary\n{summary}\n")
-                
-                print(f"  -> Found: {title[:40]}...")
+                all_articles.append({
+                    "title": title,
+                    "source": feed_info['name'],
+                    "region": feed_info['region'],
+                    "summary": summary,
+                    "url": link,
+                    "published": parsed_date
+                })
 
         except Exception as e:
             print(f"  -> Error parsing {feed_info['url']}: {e}")
             
-    print(f"=== Collection Complete. Found {count} items. ===")
+    print(f"Found {len(all_articles)} candidates. sending top items to Gemini for translation...")
+    
+    # 3. Process with Gemini (Translation & Selection)
+    try:
+        from ai_client import process_with_gemini
+        processed_items = process_with_gemini(all_articles, max_articles=15)
+    except ImportError:
+        print("Error: ai_client not found. Saving raw items.")
+        processed_items = all_articles
+
+    # 4. Save Reports
+    count = 0
+    for item in processed_items:
+        count += 1
+        # Use Japanese title if available
+        display_title = item.get('title_ja', item['title'])
+        display_summary = item.get('summary_ja', item['summary'])
+        
+        safe_title = "".join([c if c.isalnum() else "_" for c in item['title']])[:50]
+        filename = f"GEN_{count}_{safe_title}.md"
+        filepath = os.path.join(report_dir, filename)
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(f"# {display_title}\n\n")
+            f.write(f"- **Source**: {item['source']}\n")
+            f.write(f"- **Date**: {item['published']}\n")
+            f.write(f"- **URL**: {item['url']}\n\n")
+            f.write(f"## Summary\n{display_summary}\n") # Use gentle Japanese summary
+            if 'reason' in item:
+                f.write(f"\n- **Why**: {item['reason']}\n")
+        
+        print(f"  -> Saved: {display_title[:30]}...")
+            
+    print(f"=== Collection Complete. Saved {count} items. ===")
 
 if __name__ == "__main__":
     collect_from_rss()
+
+

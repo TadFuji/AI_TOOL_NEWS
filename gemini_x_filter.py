@@ -18,7 +18,7 @@ def filter_x_updates_with_gemini(raw_text: str, tool_name: str) -> str:
     client = genai.Client(api_key=api_key)
 
     prompt = f"""
-Role: Expert AI Tool Analyst.
+Role: Expert AI Tool Analyst & Translator.
 Task: Analyze the following raw search results from X (formerly Twitter) about the AI tool "{tool_name}".
 Determine if there are any **FUNCTIONAL UPDATES** (New Features, Bug Fixes, Version Releases, Performance Improvements).
 
@@ -41,11 +41,11 @@ CRITERIA (Strictly Enforced):
    - User opinions/Memes
 
 OUTPUT FORMAT (Markdown):
-If valid functional news is found, summarize it in JAPANESE using this specific format:
+If valid functional news is found, summarize it in **GENTLE, POLITE, AND EASY-TO-UNDERSTAND JAPANESE (Desu/Masu tone)**.
 - **Date**: YYYY-MM-DD HH:MM (Extract roughly from text if available, otherwise current date)
 - **URL**: (Extract the Tweet URL if present in text, otherwise leave empty)
-- **Summary**: (Clear Japanese summary of what the FEATURE does. ~100 chars)
-- **Why**: (Why this update matters to the user. ~100 chars)
+- **Summary**: (Write a clear, kind, and simple explanation of what the feature does in Japanese. ~150 chars. Use "Desu/Masu". Explain technical terms simply.)
+- **Why**: (Explain why this update makes the user's life better, in a friendly tone. ~100 chars)
 
 If NO functional news is found, output exactly: 'No significant news found'.
     """

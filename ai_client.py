@@ -3,6 +3,9 @@ import json
 import datetime
 from google import genai
 from config import NEWS_BOT_OUTPUT_DIR
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def process_with_gemini(articles: list[dict], max_articles: int = 10) -> list[dict]:
     """
@@ -39,22 +42,22 @@ def process_with_gemini(articles: list[dict], max_articles: int = 10) -> list[di
 URL: {article['url']}
 """
     
-    prompt = f"""あなたはAI・テクノロジー分野の専門家です。
-以下のニュース記事リストから、一般的な40代の日本人にとって最も重要で影響力のある10件を選び、日本語で出力してください。
+    prompt = f"""あなたは親切で知識豊富なAIテクノロジーの専門家です。
+以下のニュース記事リストから、一般の人々にとって興味深く、役に立つ10件を選び、**優しく、わかりやすく、丁寧な日本語（です・ます調）**で紹介してください。
 
 選定基準:
-- グローバルな影響度（政策、ビジネス、技術革新）
-- AI分野における重要性
-- 一般的な40代の日本人（管理職やリーダー層を含む）への関連性
-- 専門用語ばかりでなく、社会的なインパクトを重視
+- 日常生活や仕事に役立つ機能やニュース
+- AI分野の重要な進展
+- 初心者でもわかりやすい内容
+- 専門用語ばかりでなく、親しみやすさを重視
 - 重複する内容は1つだけ選ぶ
 
 出力形式（JSON配列）:
 [
   {{
     "index": 元の記事番号,
-    "title_ja": "日本語タイトル",
-    "summary_ja": "2〜3文の日本語要約。40代のビジネスパーソンに伝わる言葉で",
+    "title_ja": "親しみやすい日本語タイトル",
+    "summary_ja": "初心者にもわかる優しい要約（2〜3文）。「〜です」「〜ます」を使って丁寧に。",
     "importance_score": 1-10の重要度スコア,
     "reason": "選定理由（1文）"
   }},
@@ -71,8 +74,10 @@ URL: {article['url']}
     
     print("🧠 Gemini API (Flash Preview) で処理中...")
     
+    try:
         response = client.models.generate_content(
             model="gemini-3-flash-preview", # Verified model ID
+            contents=prompt
         )
         response_text = response.text.strip()
         
