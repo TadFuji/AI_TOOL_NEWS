@@ -50,7 +50,7 @@ The user operates two distinct AI news systems. It is critical to maintain the s
 
 2. **Install dependencies**
    ```bash
-   pip install requests
+   pip install -r requirements_bot.txt
    ```
 
 3. **Configure API Key**

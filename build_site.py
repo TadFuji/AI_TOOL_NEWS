@@ -298,11 +298,7 @@ def build():
 
     # Grid search all reports
     # Tool Reports (Root of day folder)
-    tool_reports = glob.glob(os.path.join(REPORTS_DIR, "*", "*.md"))
-    # General News Reports (Subfolder)
-    general_reports = glob.glob(os.path.join(REPORTS_DIR, "*", "general_news", "*.md"))
-    
-    all_reports = tool_reports + general_reports
+    all_reports = glob.glob(os.path.join(REPORTS_DIR, "*", "*.md"))
     
     all_items = []
     for report_path in all_reports:
