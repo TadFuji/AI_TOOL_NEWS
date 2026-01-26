@@ -1,7 +1,7 @@
 import os
 import json
 from google import genai
-from config import NEWS_BOT_OUTPUT_DIR
+# from config import NEWS_BOT_OUTPUT_DIR
 from dotenv import load_dotenv
 
 load_dotenv()
