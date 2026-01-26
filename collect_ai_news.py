@@ -54,14 +54,14 @@ def get_ai_news(tool_name, accounts):
     # Prompt optimized for Agentic execution
     prompt = (
         f"Role: Expert AI News Reporter using real-time X data.\n"
-        f"Task: Search for the LATEST significant updates from {accounts_str} within the last 24 hours.\n"
+        f"Task: Search for the LATEST significant updates from {accounts_str} within the last 3 days.\n"
         f"Current Date: {current_date}\n\n"
         "STEPS:\n"
         "1. USE x_search to find posts from these accounts.\n"
         "2. FILTER for: New Models, Feature Launches, API Updates, or Strategic Partnerships.\n"
         "3. IGNORE: Replies, memes, maintenance, or generic hype.\n"
         "4. OUTPUT: If valid news is found, output in this format:\n"
-        "- **Date**: YYYY-MM-DD\n"
+        "- **Date**: YYYY-MM-DD HH:MM (Important: Include specific time from the post)\n"
         "- **URL**: (The specific tweet URL found via search)\n"
         "- **Summary**: (Concise Japanese summary)\n"
         "- **Why**: (Impact analysis)\n"

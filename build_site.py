@@ -4,6 +4,7 @@ import datetime
 import glob
 import json
 from collections import defaultdict
+from dateutil import parser
 
 # Configuration
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -71,7 +72,23 @@ def parse_report_file(filepath):
 
         # Parse Date if available, else use file date
         date_match = re.search(r'(?:- )?\*\*Date\*\*:? (.*)', body_text)
-        item_date = date_match.group(1).strip() if date_match else "Unknown Date"
+        item_date_raw = date_match.group(1).strip() if date_match else "Unknown Date"
+        
+        # Parse Date for Display (YYYY年MM月DD日 HH時MM分)
+        display_date = item_date_raw
+        sort_date = item_date_raw
+        
+        try:
+            dt = parser.parse(item_date_raw)
+            # Format: 2026年01月25日 18時07分
+            display_date = dt.strftime("%Y年%m月%d日 %H時%M分")
+            sort_date = dt.strftime("%Y-%m-%d %H:%M") # ISO for sorting
+            # Grouping key (Day only)
+            item_date = dt.strftime("%Y-%m-%d")
+        except:
+             # Fallback if parsing fails (keep original string)
+             item_date = item_date_raw[:10] # Try to keep YYYY-MM-DD for grouping
+        
         
         url_match = re.search(r'(?:- )?\*\*URL\*\*:? (.*)', body_text)
         summary_match = re.search(r'(?:- )?\*\*Summary\*\*:? (.*)', body_text)
@@ -87,7 +104,9 @@ def parse_report_file(filepath):
         why = why_match.group(1).strip() if why_match else "Check details."
 
         items.append({
-            "date": item_date,
+            "date": item_date, # For grouping (YYYY-MM-DD)
+            "sort_date": sort_date, # For sorting (YYYY-MM-DD HH:MM)
+            "display_date": display_date, # For UI (Japanese)
             "category": category,
             "tool": tool_name,
             "summary": summary,
@@ -118,8 +137,8 @@ def generate_html_from_items(items, title, tool_map):
     content_html = ""
     
     # Sort items by Date (Newest first), then by Category
-    # Assuming date format YYYY-MM-DD
-    items.sort(key=lambda x: x['date'], reverse=True)
+    # Use sort_date for full precision
+    items.sort(key=lambda x: x.get('sort_date', x['date']), reverse=True)
     
     current_date = None
     
@@ -186,7 +205,13 @@ def generate_html_from_items(items, title, tool_map):
         card = f"""
         <div class="news-card">
             <div class="news-header">
-                <div class="tool-name">{item['tool']} <span style="font-size:0.8em; font-weight:400; color:#aaa; margin-left:10px;">({item['category']})</span></div>
+                <div class="tool-name">
+                    {item['tool']} 
+                    <span style="font-size:0.8em; font-weight:400; color:#aaa; margin-left:10px;">({item['category']})</span>
+                </div>
+                <div class="post-date" style="font-size:0.75em; color:#888; margin-top:2px;">
+                    <i class="far fa-clock"></i> {item['display_date']}
+                </div>
             </div>
             <div class="news-content">
                 <p><strong>{item['summary']}</strong></p>
