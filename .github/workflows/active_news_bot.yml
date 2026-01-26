@@ -37,9 +37,7 @@ jobs:
       run: |
         python collect_ai_news.py
 
-    - name: Run News Collection (General/RSS)
-      run: |
-        python collect_general_news.py
+
         
     - name: Post to X
       env:
