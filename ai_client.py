@@ -1,0 +1,123 @@
+import os
+import json
+import datetime
+from google import genai
+from config import NEWS_BOT_OUTPUT_DIR
+
+def process_with_gemini(articles: list[dict], max_articles: int = 10) -> list[dict]:
+    """
+    Gemini APIを使用して記事を翻訳・要約し、重要度スコアを付与する
+    
+    Args:
+        articles: 記事リスト
+        max_articles: 処理する最大記事数
+    
+    Returns:
+        処理済み記事リスト（日本語タイトル、日本語要約、スコア付き）
+    """
+    # APIキーを取得 (.envから読み込まれていることを前提)
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        print("❌ GOOGLE_API_KEY 環境変数が設定されていません")
+        return articles[:max_articles]
+    
+    # Geminiを設定
+    client = genai.Client(api_key=api_key)
+    
+    # 記事情報をまとめてプロンプトに含める
+    articles_text = ""
+    # Limit to top 30 newest items to avoid token limits
+    articles_sorted = sorted(articles, key=lambda x: x.get('published', datetime.datetime.min) or datetime.datetime.min, reverse=True)
+    
+    for i, article in enumerate(articles_sorted[:30]): 
+        articles_text += f"""
+---
+記事{i+1}:
+タイトル: {article['title']}
+ソース: {article['source']} ({article['region']})
+概要: {article['summary'][:300]}
+URL: {article['url']}
+"""
+    
+    prompt = f"""あなたはAI・テクノロジー分野の専門家です。
+以下のニュース記事リストから、一般的な40代の日本人にとって最も重要で影響力のある10件を選び、日本語で出力してください。
+
+選定基準:
+- グローバルな影響度（政策、ビジネス、技術革新）
+- AI分野における重要性
+- 一般的な40代の日本人（管理職やリーダー層を含む）への関連性
+- 専門用語ばかりでなく、社会的なインパクトを重視
+- 重複する内容は1つだけ選ぶ
+
+出力形式（JSON配列）:
+[
+  {{
+    "index": 元の記事番号,
+    "title_ja": "日本語タイトル",
+    "summary_ja": "2〜3文の日本語要約。40代のビジネスパーソンに伝わる言葉で",
+    "importance_score": 1-10の重要度スコア,
+    "reason": "選定理由（1文）"
+  }},
+  ...
+]
+
+---
+記事リスト:
+{articles_text}
+---
+
+重要: 必ず10件選び、JSON配列のみを出力してください。マークダウンのコードブロックは不要です。
+"""
+    
+    print("🧠 Gemini API (Flash Preview) で処理中...")
+    
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview", # Verified model ID
+        )
+        response_text = response.text.strip()
+        
+        # JSONをパース（コードブロックがある場合は除去）
+        if response_text.startswith("```"):
+            lines = response_text.split("\n")
+            # Handle ```json vs ```
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines[-1].startswith("```"):
+                lines = lines[:-1]
+            response_text = "\n".join(lines)
+        
+        results = json.loads(response_text)
+        
+        # 結果を元の記事情報とマージ
+        processed = []
+        for result in results:
+            idx = result.get("index", 1) - 1
+            if 0 <= idx < len(articles_sorted):
+                article = articles_sorted[idx].copy()
+                article["title_ja"] = result.get("title_ja", article["title"])
+                article["summary_ja"] = result.get("summary_ja", "要約なし")
+                article["importance_score"] = result.get("importance_score", 5)
+                article["reason"] = result.get("reason", "")
+                
+                # Convert datetime to string for JSON serialization
+                if isinstance(article.get('published'), datetime.datetime):
+                    article['published'] = article['published'].isoformat()
+                    
+                processed.append(article)
+        
+        # スコアで降順ソート
+        processed.sort(key=lambda x: x.get("importance_score", 0), reverse=True)
+        
+        print(f"✅ Gemini 処理完了: {len(processed)} 件")
+        return processed[:max_articles]
+        
+    except Exception as e:
+        print(f"❌ Gemini API エラー: {e}")
+        # フォールバック: 元の記事をそのまま返す (JSON serializable fix needed)
+        fallback = []
+        for a in articles_sorted[:max_articles]:
+            ac = a.copy()
+            if isinstance(ac.get('published'), datetime.datetime):
+                ac['published'] = ac['published'].isoformat()
+            fallback.append(ac)
+        return fallback
