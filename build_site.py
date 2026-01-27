@@ -180,7 +180,7 @@ def parse_report_file(filepath):
     return items
 
 def load_targets():
-    """Laws targets.json to map tool names to twitter handles."""
+    """Loads targets.json to map tool names to twitter handles."""
     targets_path = os.path.join(BASE_DIR, "targets.json")
     tool_map = {}
     try:

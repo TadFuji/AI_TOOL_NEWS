@@ -120,7 +120,6 @@ def main():
     target_dirs = [today_str, yesterday_str]
     
     all_reports = []
-    all_reports = []
     for d in target_dirs:
         day_path = os.path.join(REPORTS_DIR, d)
         if os.path.exists(day_path):
