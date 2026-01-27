@@ -18,10 +18,9 @@ def load_api_key():
     return os.environ.get("XAI_API_KEY")
 
 API_KEY = load_api_key()
-# Crucial: Use Agent Endpoint and Grok-4 family for server-side x_search
-API_URL = "https://api.x.ai/v1/chat/completions"
-# Using grok-4-1-fast-non-reasoning as verified (Low Cost & Fast)
-MODEL = "grok-4-1-fast-non-reasoning" 
+# Use Responses API for server-side agentic x_search
+API_URL = "https://api.x.ai/v1/responses"
+MODEL = "grok-4-1-fast"  # Optimized for agentic search
 
 TARGETS_FILE = "targets.json"
 BASE_REPORT_DIR = "reports"
@@ -31,7 +30,6 @@ IO_LOCK = threading.Lock()
 
 def setup_report_dir():
     """Creates a directory for today's reports."""
-    # TIMEZONE FIX: GitHub Actions runs in UTC. Force JST (UTC+9)
     JST = datetime.timezone(datetime.timedelta(hours=9))
     today = datetime.datetime.now(JST).strftime("%Y-%m-%d")
     path = os.path.join(BASE_REPORT_DIR, today)
@@ -46,7 +44,8 @@ def load_targets():
 
 def get_category_news(category_name, tools_list):
     """
-    Queries xAI Agent API to autonomously search X for A BATCH of tools.
+    Queries xAI Responses API with built-in x_search tool.
+    The API executes X searches server-side and returns results.
     """
     headers = {
         "Content-Type": "application/json",
@@ -54,118 +53,110 @@ def get_category_news(category_name, tools_list):
     }
     
     JST = datetime.timezone(datetime.timedelta(hours=9))
-    current_date = datetime.datetime.now(JST).strftime("%Y-%m-%d")
+    now = datetime.datetime.now(JST)
+    current_date = now.strftime("%Y-%m-%d")
+    from_date = (now - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
     
-    # Construct Batch Prompt
+    # Collect all X handles for this category (max 10 for x_search)
+    all_accounts = []
     tools_desc = ""
     for t in tools_list:
         tools_desc += f"- {t['name']}: {', '.join(t['accounts'])}\n"
-
-    # Prompt optimized for Batch execution & JSON output
+        for acc in t['accounts']:
+            clean_acc = acc.lstrip('@').strip()
+            if clean_acc and clean_acc not in all_accounts:
+                all_accounts.append(clean_acc)
+    
+    # xAI x_search limit: max 10 handles per request
+    allowed_handles = all_accounts[:10]
+    
+    # Prompt for the AI to analyze search results
     prompt = (
-        f"Role: AI News Aggregator.\n"
+        f"Role: AI News Aggregator for Japanese audience.\n"
         f"Current Date: {current_date}\n\n"
-        f"Task: Search for the LATEST updates (last 3 days) for the following AI tools/companies:\n"
+        f"Task: Search X for the LATEST updates (last 3 days) from these AI tools/companies:\n"
         f"{tools_desc}\n"
         "INSTRUCTIONS:\n"
-        "1. Use the 'x_search' tool to check the official accounts for EACH tool listed above.\n"
-        "2. Look for: Product launches, model updates, new features, or official announcements. Ignore random chatter.\n"
-        "3. Output MUST be a valid JSON list of objects. Each object must represent ONE tool.\n"
-        "4. Format:\n"
+        "1. Search X for posts from the official accounts listed above.\n"
+        "2. Look for: Product launches, model updates, new features, or official announcements.\n"
+        "3. Ignore: random chatter, retweets of unrelated content, promotional fluff.\n"
+        "4. Output MUST be a valid JSON list. Each object represents ONE tool:\n"
         "   [\n"
         "     {\n"
         "       \"tool_name\": \"Name from the list\",\n"
         "       \"has_news\": true/false,\n"
-        "       \"post_text\": \"Raw text of the post found (or 'No recent updates')\",\n"
+        "       \"post_text\": \"Raw text of the post (or 'No recent updates')\",\n"
         "       \"post_date\": \"YYYY-MM-DD HH:MM\",\n"
         "       \"post_url\": \"https://x.com/...\"\n"
-        "     },\n"
-        "     ...\n"
+        "     }\n"
         "   ]\n"
         "5. If no news is found for a tool, set has_news: false.\n"
-        "6. Return ONLY the JSON. No markdown fencing if possible, or minimally fenced."
+        "6. Return ONLY the JSON. No markdown fencing."
     )
-
-    # Tool Definition
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "x_search",
-                "description": "Search X for posts from specific users.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {"type": "string"},
-                        "usernames": {"type": "array", "items": {"type": "string"}},
-                    },
-                    "required": ["query"]
-                }
-            }
-        }
-    ]
 
     payload = {
         "model": MODEL,
-        "messages": [
-            {"role": "system", "content": "You are an automated news collector agent. You output strict JSON."},
+        "input": [
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.0,
-        "tools": tools,
-        "tool_choice": "auto"
+        "tools": [
+            {
+                "type": "x_search",
+                "allowed_x_handles": allowed_handles,
+                "from_date": from_date,
+                "to_date": current_date
+            }
+        ],
+        "temperature": 0.0
     }
 
     try:
-        # Retry logic
         for attempt in range(3):
             try:
-                response = requests.post(API_URL, headers=headers, data=json.dumps(payload), timeout=120)
+                response = requests.post(API_URL, headers=headers, data=json.dumps(payload), timeout=180)
                 
                 if response.status_code == 200:
                     data = response.json()
                     
-                    # Message content parsing
                     try:
-                        message = data['choices'][0]['message']
-                        content = message.get('content', '')
+                        # Responses API: output is a list
+                        # Find the 'message' type and extract text from content[].text
+                        output_list = data.get('output', [])
+                        text_content = ""
                         
-                        # Fallback: if content is null but tool_calls exist, the model might be stuck in tool loop
-                        # But with "chat/completions", Grok usually returns the final answer in content after tool usage if we don't force tool loop in python.
-                        # Wait, the xAI API for agents usually runs server-side loops.
-                        # If using the 'responses' endpoint (agent), we get final output.
-                        # If using 'chat/completions', we might need to handle tool calls? 
-                        # The user snippet suggests "agentic server-side tool calling".
-                        # Let's trust the 'chat/completions' with tool_choice auto handles it or returns the result.
-                        # Actually, for xAI, 'v1/responses' was the agent endpoint (used in prev code).
-                        # User snippet recommends 'v1/chat/completions'. Let's stick to that but handle potential tool_calls if xAI doesn't auto-resolve server side?
-                        # Re-reading user note: "agentic server-side tool calling... use prompts that instruct... The model will handle the tool calls agentically, returning processed results."
-                        # This implies the MODEL does the thinking and just gives us the answer? 
-                        # Or does it return tool_calls for US to execute?
-                        # The snippet says: "Parse response for tool calls AND results".
-                        # However, for simplicity and ensuring it works like the previous 'responses' endpoint (which was fully server side), 
-                        # let's try to extract JSON from the content.
+                        for item in output_list:
+                            if isinstance(item, dict) and item.get('type') == 'message':
+                                content_list = item.get('content', [])
+                                for content_item in content_list:
+                                    if isinstance(content_item, dict) and content_item.get('type') == 'output_text':
+                                        text_content = content_item.get('text', '')
+                                        break
+                                if text_content:
+                                    break
                         
-                        if not content:
-                            return "Error: No content returned (maybe raw tool calls?)"
+                        if not text_content:
+                            return "Error: No text content in API response"
 
-                        # Clean markdown
-                        clean_json = content.replace("```json", "").replace("```", "").strip()
+                        # Clean markdown fencing if present
+                        clean_json = text_content.replace("```json", "").replace("```", "").strip()
                         return json.loads(clean_json)
 
                     except (KeyError, json.JSONDecodeError) as e:
-                        print(f"    ⚠️ JSON Parse Error in Category Batch: {e}")
-                        # If not JSON, maybe just text?
-                        return f"Error: Parsing failed. Raw: {content[:100]}"
+                        print(f"    ⚠️ JSON Parse Error: {e}")
+                        return f"Error: Parsing failed. Raw: {str(text_content)[:200]}"
                         
                 elif response.status_code == 429:
                     print(f"    ⚠️ 429 Rate Limit. Sleeping 30s...")
                     time.sleep(30)
                     continue
+                elif response.status_code == 500:
+                    print(f"    ⚠️ 500 Server Error. Sleeping 10s and retrying...")
+                    time.sleep(10)
+                    continue
                 else:
-                    return f"Error: {response.status_code} - {response.text}"
+                    return f"Error: {response.status_code} - {response.text[:500]}"
             except requests.exceptions.Timeout:
-                print("Request timed out, retrying...")
+                print(f"    ⚠️ Request timed out (attempt {attempt+1}/3), retrying...")
                 continue
         return "Error: Failed after 3 retries"
 
@@ -183,7 +174,6 @@ def process_category(category_data, report_dir):
         print(f"📦 Batch Processing: {cat_name} ({len(tools_list)} tools)...")
     
     try:
-        # Call Grok for the whole bunch
         results = get_category_news(cat_name, tools_list)
         
         if isinstance(results, str) and results.startswith("Error"):
@@ -191,20 +181,14 @@ def process_category(category_data, report_dir):
                  print(f"  ❌ Batch Failed: {cat_name} -> {results}")
              return
 
-        # It should be a list of dicts
         if not isinstance(results, list):
              with IO_LOCK:
                  print(f"  ❌ Batch Error: Expected list, got {type(results)}")
              return
 
-        # Process each tool result in the batch
         for item in results:
             tool_name = item.get('tool_name', 'Unknown')
             has_news = item.get('has_news', False)
-            
-            # Map back to accounts if possible, or just trust the tool name
-            # Validation: Check if tool_name is in our target list
-            # (Grok might hallucinate names so be careful)
             
             if not has_news:
                 with IO_LOCK:
@@ -215,19 +199,11 @@ def process_category(category_data, report_dir):
             post_date = item.get('post_date', 'Unknown Date')
             post_url = item.get('post_url', '#')
 
-            # HYBRID PIPELINE: Gemini Filter (Optional per item)
-            # Keeping it simple for now to save cost/time: Trust Grok's separation?
-            # Or pass to Gemini? Passing 7 batches to Gemini is cheaper than 36.
-            # Let's pass the raw text to Gemini Filter like before if text exists.
-            
             final_text = post_text
             
-            # Try Gemini Filter if text is long enough
-            # (Re-using existing logic logic but adapted)
             if len(post_text) > 20:
                 try:
                     from gemini_x_filter import filter_x_updates_with_gemini
-                    # We print less now
                     gemini_result = filter_x_updates_with_gemini(post_text, tool_name)
                     final_text = gemini_result
                 except ImportError:
@@ -236,7 +212,6 @@ def process_category(category_data, report_dir):
             with IO_LOCK:
                 print(f"  ✅ News Found: {tool_name}")
 
-            # Save Report (Individual file to maintain architecture)
             count_str = tool_name.replace(' ', '_').replace('/', '-')
             filename = f"{count_str}.md"
             filepath = os.path.join(report_dir, filename)
@@ -256,17 +231,15 @@ def process_category(category_data, report_dir):
 
 # Main Execution Block
 if __name__ == "__main__":
-    print("=== AI News Collection Start (Cost-Optimized Cluster Mode) ===")
+    print("=== AI News Collection Start (Responses API Mode) ===")
     
     report_dir = setup_report_dir()
     config = load_targets()
     
-    # Process Categories sequentially or parallel?
-    # Parallel Categories is fine. 7 threads is standard.
-    
     print(f"🚀 Launching {len(config)} category agents...")
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+    # Process categories with limited parallelism to avoid rate limits
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         futures = {executor.submit(process_category, cat, report_dir): cat for cat in config}
         
         for future in concurrent.futures.as_completed(futures):
@@ -276,5 +249,3 @@ if __name__ == "__main__":
                 print(f"Category thread exception: {exc}")
 
     print("\n=== Collection Complete ===")
-
-
