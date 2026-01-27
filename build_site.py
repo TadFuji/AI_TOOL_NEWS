@@ -101,6 +101,10 @@ def parse_report_file(filepath):
             post_blocks = [body_text]
 
         for block in post_blocks:
+            # Skip blocks that contain "No significant news found"
+            if "No significant news found" in block or "no significant news found" in block.lower():
+                continue
+                
             # If we split by "- Post:", the block content starts immediately with the post text content (or "Summary")
             # The regex needs to handle "Summary" starting logically at start of string
             
