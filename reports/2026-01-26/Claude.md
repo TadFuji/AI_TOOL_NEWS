@@ -1,34 +1,42 @@
 # 1. Top Tier - Daily Report
 
 ## Claude
-- Post: Claude in Excel is now available on Pro plans. Claude now accepts multiple files via drag and drop, avoids overwriting your existing cells, and handles longer sessions with auto compaction. Get started: https://claude.com/claude-in-excel
+- Post: - **Summary**: ClaudeのExcel版がProプランに登場しました！複数ファイルをドラッグ＆ドロップでまとめて処理でき、既存セルを上書きする心配もありません。長時間の作業も自動圧縮で快適に続けられますよ。
+- **Why**: 複数の資料を一度に扱え、大切なデータを守りつつ、Excelでの作業がよりスムーズで快適になります。
 - Time: 2026-01-23 22:56
 - URL: https://x.com/claudeai/status/2014834616889475508
 
-- Post: On Jan 30, our team is hosting a live session demoing Cowork workflows.  Sign up to join: https://www.anthropic.com/webinars/future-of-ai-at-work-introducing-cowork
+- Post: - **Summary**: Claudeを提供するAnthropic社が、AIと連携する「Coworkワークフロー」のライブデモを1月30日に開催します。AIを使った新しい仕事の進め方をご紹介します。
+- **Why**: AIとの連携で、日々の業務がよりスムーズになり、チーム全体の生産性向上が期待できます。
 - Time: 2026-01-23 17:15
 - URL: https://x.com/claudeai/status/2014748933239750908
 
-- Post: You can also use Cowork to do marketing sizing for an industry:
+- Post: - **Summary**: Claudeの新しい機能「Cowork」を使えば、特定の業界の市場規模を調査・算出（marketing sizing）できるようになりました。ビジネス戦略の策定に役立ちます。
+- **Why**: 市場の可能性を素早く把握し、ビジネス戦略の精度を高められます。調査の手間が省け、意思決定を加速します。
 - Time: 2026-01-23 17:15
 - URL: https://x.com/claudeai/status/2014748931302031426
 
-- Post: With Cowork you can onboard new vendors at scale:
+- Post: - **Summary**: Claudeが新機能としてCoworkとの連携を強化しました。これにより、新しいベンダー（供給業者）のオンボーディング（導入手続き）を効率的かつ大規模に行えるようになります。
+- **Why**: ベンダー導入の手間が大幅に削減され、ビジネスの拡大をスムーズにサポートします。
 - Time: 2026-01-23 17:15
 - URL: https://x.com/claudeai/status/2014748929116832166
 
-- Post: While still in research preview, we've shipped two new updates: You can @-mention projects to bring context into Cowork sessions, and Claude in Chrome now shows live screenshots as it works. Give it a try: https://claude.com/download
+- Post: **Summary**: Claudeの最新アップデートで、共同作業がさらに便利になりました。Coworkセッションではプロジェクトを@メンションでき、Chrome版ではClaudeが動く様子をリアルタイムの画面共有（ライブスクリーンショット）で確認できます。
+**Why**: プロジェクトの情報共有がスムーズになり、Claudeが何をしているか目で見てわかるので、安心して作業を進められます。
 - Time: 2026-01-23 17:15
 - URL: https://x.com/claudeai/status/2014748925144793476
 
-- Post: Claude Cowork is now available for Team and Enterprise plans.
+- Post: - **Summary**: Claude Coworkがチームおよびエンタープライズプランでご利用いただけるようになりました。複数人での共同作業がこれまで以上にスムーズに行えるようになります。
+- **Why**: チームや企業でのプロジェクトが円滑に進み、日々の業務効率と生産性が格段に向上します。
 - Time: 2026-01-23 17:15
 - URL: https://x.com/claudeai/status/2014748923278311855
 
-- Post: We've also updated our behavior audits to include more recent generations of frontier AI models.  Read more on the Alignment Science Blog: https://alignment.anthropic.com/2026/petri-v2/
+- Post: - **Summary**: Claudeの安全性評価（行動監査）が最新のAIモデルに対応するよう更新されました。これにより、より安心・安全にご利用いただけます。
+- **Why**: 最新AIモデルでも高い安全性が保たれ、安心してご利用いただけます。より信頼できるAI体験が可能です。
 - Time: 2026-01-23 00:08
 - URL: https://x.com/AnthropicAI/status/2014490504415871456
 
-- Post: Since release, Petri, our open-source tool for automated alignment audits, has been adopted by research groups and trialed by other AI developers. We're now releasing Petri 2.0, with improvements to counter eval-awareness and expanded seeds covering a wider range of behaviors.
+- Post: - **Summary**: オープンソースのAI監査ツール「Petri」が2.0に進化しました！AIが評価を意識しすぎる問題を改善し、より多様なAIの振る舞いをカバーできるようになりました。これにより、AIの信頼性検証がさらに精密に行えるようになります。
+- **Why**: AIの予期せぬ動作をより正確に、かつ効率よく見つけられるようになります。AI開発や利用の安心感が増しますね。
 - Time: 2026-01-23 00:08
 - URL: https://x.com/AnthropicAI/status/2014490502805311959
