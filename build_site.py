@@ -68,7 +68,7 @@ def parse_report_file(filepath):
         body_text = "\n".join(lines[1:]).strip()
 
         # Check for empty report immediately
-        if "No recent posts" in body_text or "Updates not found" in body_text or body_text.strip() == "":
+        if "No recent posts" in body_text or "Updates not found" in body_text or "No significant news found" in body_text or body_text.strip() == "":
             continue
 
         # Split by "- Post:" to support multiple posts per tool
@@ -224,6 +224,11 @@ def generate_html_from_items(items, title, tool_map):
         if key in seen:
             continue
         seen.add(key)
+        
+        # Skip items with "No significant news found" in summary
+        if "No significant news found" in item['summary'] or "no significant news found" in item['summary'].lower():
+            continue
+            
         unique_items.append(item)
     
     # Use unique_items for generation
