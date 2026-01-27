@@ -44,8 +44,7 @@ OUTPUT FORMAT (Markdown):
 If valid functional news is found, summarize it in **GENTLE, POLITE, AND EASY-TO-UNDERSTAND JAPANESE (Desu/Masu tone)**.
 - **Date**: YYYY-MM-DD HH:MM (Extract roughly from text if available, otherwise current date)
 - **URL**: (Extract the Tweet URL if present in text, otherwise leave empty)
-- **Summary**: (Write a clear, kind, and simple explanation of what the feature does in Japanese. ~150 chars. Use "Desu/Masu". Explain technical terms simply.)
-- **Why**: (Explain why this update makes the user's life better, in a friendly tone. ~100 chars)
+- **Summary**: (Write a clear, kind, and simple explanation of what the feature does AND why it benefits the user, in Japanese. ~200 chars. Use "Desu/Masu". Explain technical terms simply. Include the user benefit naturally in the explanation.)
 
 If NO functional news is found, output exactly: 'No significant news found'.
     """
