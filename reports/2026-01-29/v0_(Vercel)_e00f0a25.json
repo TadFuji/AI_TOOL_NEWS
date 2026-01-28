@@ -1,8 +1,8 @@
 {
   "category": "3. Coding & Development",
   "tool": "v0 (Vercel)",
-  "summary": "- **Date**: 2024-11-06\n- **URL**: https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals\n- **Summary**: Vercelは、AIがプロジェクトで使われているライブラリのバージョンを正確に把握するための新手法「AGENTS.md」を発表しました。これにより、v0などのAIツールが、お使いの開発環境に最適なコードをより正確に提案できるようになります。バージョンの違いによるエラーが減り、修正の手間が省けるようになるため、これまで以上にスムーズに開発を進めることができます。",
+  "summary": "- **Date**: 2024-05-24 11:00\n- **URL**: https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals\n- **Summary**: Vercelは、AIがプロジェクトで使われているNext.jsなどのフレームワークのバージョンを正確に把握するための新しい仕組みを発表しました。「AGENTS.md」という手法を用いることで、AIが常に最新かつ最適な書き方でコードを提案できるようになります。バージョンの違いによるエラーを未然に防げるため、開発がよりスムーズに進むようになります。",
   "post_date": "2026-01-28 21:03",
   "url": "https://x.com/vercel/status/2016618115879358816",
-  "collected_at": "2026-01-29T07:26:07.862120+09:00"
+  "collected_at": "2026-01-29T08:26:14.413842+09:00"
 }
