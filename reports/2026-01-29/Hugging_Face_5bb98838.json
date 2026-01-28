@@ -1,0 +1,8 @@
+{
+  "category": "3. Coding & Development",
+  "tool": "Hugging Face",
+  "summary": "- **Date**: 2024-05-24 09:00\n- **URL**: https://huggingface.co/blog/nvidia/earth-2-open-models\n- **Summary**: NVIDIAの新しい気象予測モデル「Earth-2」とデータセット「Atlas-ERA5」がHugging Face上で公開されました。これにより、高度な気象シミュレーションや膨大なデータに誰でも簡単にアクセスできるようになります。専門的な環境分析や将来の予測がより手軽に行えるようになり、研究やアプリ開発に役立てることができます。",
+  "post_date": "2026-01-26 15:00",
+  "url": "https://x.com/huggingface/status/2015801961568760121",
+  "collected_at": "2026-01-29T03:36:12.077814+09:00"
+}
