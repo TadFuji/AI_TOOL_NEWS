@@ -64,6 +64,7 @@ def parse_report_file(filepath):
     
     for section in sections:
         lines = section.strip().split('\n')
+        if not lines: continue
         tool_name = lines[0].strip()
         body_text = "\n".join(lines[1:]).strip()
 
@@ -72,78 +73,69 @@ def parse_report_file(filepath):
             continue
 
         # Split by "- Post:" to support multiple posts per tool
-        # Adding a lookahead or just splitting and filtering empty chunks
-        # The markdown format usually is "- Post: ... \n - Time: ... "
-        # We start by splitting by correct marker.
-        # Note: The first post might start immediately or after some newlines.
-        
-        # Normalize body text (ensure it starts with - Post if it's there)
-        # But sometimes it might just be text.
-        
-        # Strategy: Find all occurrences of "- Post:" and their indices
-        # If no "- Post:" found, treat whole body as one item (legacy)
-        
         post_blocks = []
         if "- Post:" in body_text:
-            # Split by - Post:, but keep the delimiter or prepend it back
-            # re.split with capturing group creates chunks: [pre, - Post:, content, - Post:, content...]
-            # Simpler: raw string split
             raw_chunks = body_text.split("- Post:")
-            
-            # First chunk is usually empty or headers, unless file doesn't start with - Post:
-            # If body_text starts with "- Post:", raw_chunks[0] is empty.
-            
             for chunk in raw_chunks:
                 if not chunk.strip(): continue
-                # We stripped "- Post:", so add it back to make regex work or adjust regex
                 post_blocks.append(chunk.strip())
         else:
             post_blocks = [body_text]
 
         for block in post_blocks:
-            # Skip blocks that contain "No significant news found"
             if "No significant news found" in block or "no significant news found" in block.lower():
                 continue
                 
-            # If we split by "- Post:", the block content starts immediately with the post text content (or "Summary")
-            # The regex needs to handle "Summary" starting logically at start of string
-            
             # Parse Date
-            # Support multiple formats: "**Date**: ...", "Time: ...", "- Time: ..."
-            date_match = re.search(r'(?:- )?(?:\*\*Date\*\*|Time):? (.*)', block)
-            item_date_raw = date_match.group(1).strip() if date_match else "Unknown Date"
+            # Prefer "Time:" (actual post time) over "**Date**:" (often historical/hallucinated in summary)
+            # Find all occurrences and pick the best one
+            time_match = re.search(r'(?:- )?Time:? (.*)', block)
+            date_match = re.search(r'(?:- )?\*\*Date\*\*:? (.*)', block)
             
-            # Skip if unknown date and it looks empty (double check)
-            if item_date_raw == "Unknown Date" and len(block) < 20: 
-                continue
-
+            item_date_raw = "Unknown Date"
+            if time_match:
+                item_date_raw = time_match.group(1).strip()
+            elif date_match:
+                item_date_raw = date_match.group(1).strip()
+            
             # Parse URL
-            url_match = re.search(r'(?:- )?(?:\*\*URL\*\*|URL):? (.*)', block)
-            url = url_match.group(1).strip() if url_match else "#"
+            # Prefer actual "URL:" over "**URL**:" inside summary
+            url_match_main = re.search(r'(?:- )?URL:? (https?://\S+)', block)
+            url_match_sub = re.search(r'(?:- )?\*\*URL\*\*:? (https?://\S+)', block)
             
-            # Parse Summary/Post Text
-            # It's everything before Time/URL usually.
-            # Regex: Start of block until Time or URL
-            # Or just take the lines valid.
+            url = "#"
+            if url_match_main:
+                url = url_match_main.group(1).strip()
+            elif url_match_sub:
+                url = url_match_sub.group(1).strip()
             
-            # If we split by "- Post:", block is just the content.
-            # But we need to exclude metadata lines (Time:, URL:) from summary
-            
+            # Parse Summary
+            # We want everything that ISN'T a Date/Time/URL marker line,
+            # but we also want the content AFTER the markers if it was on the same line.
             summary_lines = []
             for line in block.split('\n'):
-                if re.match(r'(?:- )?(?:\*\*Date\*\*|Time):', line): continue
-                if re.match(r'(?:- )?(?:\*\*URL\*\*|URL):', line): continue
-                if re.match(r'(?:- )?(?:\*\*Summary\*\*|Post):', line): continue # In case it was left over
-                summary_lines.append(line)
+                # If the line contains a marker, try to extract the content if it's there
+                # Markers to check: - Post:, - Time:, - URL:, - **Date**:, - **Summary**:, - **URL**:
+                clean_line = line.strip()
+                
+                # Strip out the markers but keep the text
+                clean_line = re.sub(r'^(?:- )?(?:Post|Time|URL|\*\*Date\*\*|\*\*Summary\*\*|\*\*URL\*\*):', '', clean_line).strip()
+                
+                if clean_line:
+                    # If the cleaned line is just a URL we already have, or just the date we have, skip it to avoid clutter
+                    if clean_line == url or clean_line == item_date_raw:
+                        continue
+                    summary_lines.append(clean_line)
             
-            summary = "\n".join(summary_lines).strip()
-            # Clean up ** wrappers if present from old parsing
-            summary = summary.replace("**Post**", "").strip()
-            if summary.startswith(":"): summary = summary[1:].strip()
+            summary = " ".join(summary_lines).strip()
+            # Clean up ** wrappers if present
+            summary = summary.replace("**", "").strip()
             
-            summary = summary.replace("\n", "<br>")
+            if not summary or summary == "":
+                continue
 
-            why = "Check details." # Default why
+            summary = summary.replace("\n", " ").replace("  ", " ")
+            why = "Check details." 
 
             # Date Processing
             display_date = item_date_raw
@@ -151,9 +143,12 @@ def parse_report_file(filepath):
             item_date = "Unknown Date"
 
             try:
-                clean_date = re.sub(r'\(?(GMT|UTC)\)?', '', item_date_raw).strip()
+                # Remove common timezone strings for parser
+                clean_date = re.sub(r'\(?(GMT|UTC|JST)\)?', '', item_date_raw).strip()
+                # Handle YYYY-MM-DD HH:MM
                 dt = parser.parse(clean_date)
                 if dt.tzinfo is None:
+                    # Assume UTC if not specified, then convert to JST
                     dt = dt.replace(tzinfo=datetime.timezone.utc)
                 jst = datetime.timezone(datetime.timedelta(hours=9))
                 dt_jst = dt.astimezone(jst)
@@ -162,7 +157,6 @@ def parse_report_file(filepath):
                 sort_date = dt_jst.strftime("%Y-%m-%d %H:%M")
                 item_date = dt_jst.strftime("%Y-%m-%d")
             except:
-                 # Fallback regex
                  match = re.search(r'(\d{4}-\d{2}-\d{2})', item_date_raw)
                  if match:
                      item_date = match.group(1)

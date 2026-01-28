@@ -6,7 +6,6 @@ __pycache__/
 .venv
 env/
 venv/
-reports/
 output/
 backup_before_cleanup/
 backup_20260127/
