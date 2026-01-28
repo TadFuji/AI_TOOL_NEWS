@@ -70,26 +70,28 @@ def parse_report_file(filepath):
         tool_name = lines[0].strip()
         body_text = "\n".join(lines[1:]).strip()
 
-        # Skip empty or "no news" reports
-        if "Updates not found" in body_text or "No significant news" in body_text or not body_text:
-            continue
+        # New logic: find "**Summary**:" and take the rest of the text
+        # Also find the final "- URL:" line
+        summary_search = re.search(r'\*\*Summary\*\*:\s*(.*)', body_text, re.DOTALL)
+        url_search = re.findall(r'- URL:\s*(https?://[^\s\n]+)', body_text)
         
-        # Extract Summary and URL
-        summary_match = re.search(r'(?:- )?\*\*Summary\*\*:? (.*)', body_text)
-        url_match = re.search(r'(?:- )?\*\*URL\*\*:? (.*)', body_text)
-        
-        if summary_match and url_match:
-            summary = summary_match.group(1).strip().replace("**", "")
-            url = url_match.group(1).strip()
+        if summary_search:
+            # The summary might be followed by "Time:" or other fields, clean it up
+            summary_raw = summary_search.group(1).strip()
+            # Clean up potential trailing fields if they leaked into summary
+            summary = re.split(r'\n- (?:Time|URL):', summary_raw)[0].strip()
+            summary = summary.replace("**", "")
+
+            # Get the last URL found in the section (usually the most accurate source)
+            url = url_search[-1] if url_search else ""
             
-            # Simple validation to ensure we grabbed something
             if len(summary) > 5 and url.startswith("http"):
                 items.append({
                     "tool": tool_name,
                     "category": category,
                     "summary": summary,
                     "url": url,
-                    "id": url  # Use URL as unique ID for history
+                    "id": url
                 })
     return items
 
