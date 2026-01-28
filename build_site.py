@@ -293,23 +293,87 @@ def generate_html_from_items(items, title, tool_map):
         
     return HTML_HEADER.format(page_title=title) + content_html + HTML_FOOTER
 
+def load_all_reports():
+    """Scans for both legacy .md and new .json reports and parses them efficiently."""
+    all_items = []
+    
+    # Grid search all JSON reports (New Standard)
+    json_reports = glob.glob(os.path.join(REPORTS_DIR, "*", "*.json"))
+    print(f"  Scanning {len(json_reports)} JSON reports...")
+    for path in json_reports:
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+                # Normalize JSON data to the item format
+                # Note: We still use the date processing logic inside our build
+                item_date_raw = data.get('post_date', 'Unknown Date')
+                
+                item = {
+                    "raw_date": item_date_raw,
+                    "category": data.get('category', 'Uncategorized'),
+                    "tool": data.get('tool', 'Unknown'),
+                    "summary": data.get('summary', ''),
+                    "why": "Check details.",
+                    "url": data.get('url', '#'),
+                }
+                
+                # Apply date logic
+                item.update(process_item_date(item_date_raw))
+                
+                if "No significant news found" not in item['summary']:
+                    all_items.append(item)
+        except Exception as e:
+            print(f"    ⚠️ Error parsing JSON {path}: {e}")
+
+    # Grid search all legacy MD reports
+    md_reports = glob.glob(os.path.join(REPORTS_DIR, "*", "*.md"))
+    print(f"  Scanning {len(md_reports)} Markdown reports (Legacy)...")
+    for path in md_reports:
+        items = parse_report_file(path)
+        all_items.extend(items)
+        
+    return all_items
+
+def process_item_date(date_raw):
+    """Helper to unify date processing."""
+    display_date = date_raw
+    sort_date = date_raw
+    item_date = "Unknown Date"
+
+    try:
+        clean_date = re.sub(r'\(?(GMT|UTC|JST)\)?', '', date_raw).strip()
+        dt = parser.parse(clean_date)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        jst = datetime.timezone(datetime.timedelta(hours=9))
+        dt_jst = dt.astimezone(jst)
+        
+        display_date = dt_jst.strftime("%Y年%m月%d日 %H時%M分")
+        sort_date = dt_jst.strftime("%Y-%m-%d %H:%M")
+        item_date = dt_jst.strftime("%Y-%m-%d")
+    except:
+         match = re.search(r'(\d{4}-\d{2}-\d{2})', date_raw)
+         if match:
+             item_date = match.group(1)
+         elif date_raw != "Unknown Date" and len(date_raw) >= 10:
+             item_date = date_raw[:10]
+    
+    return {
+        "date": item_date,
+        "sort_date": sort_date,
+        "display_date": display_date
+    }
+
 def build():
     print("Starting build process...")
     
     # Load targets for account mapping
     tool_map = load_targets()
 
-    # Grid search all reports
-    # Tool Reports (Root of day folder)
-    all_reports = glob.glob(os.path.join(REPORTS_DIR, "*", "*.md"))
+    # Load all items from both formats
+    all_items = load_all_reports()
     
-    all_items = []
-    for report_path in all_reports:
-        # We can extract the file date from the parent folder name if needed
-        # But for now we parse the file content
-        items = parse_report_file(report_path)
-        all_items.extend(items)
-        
     print(f"Total News Items Found: {len(all_items)}")
 
     # 1. Generate Index (Latest 3 Days)

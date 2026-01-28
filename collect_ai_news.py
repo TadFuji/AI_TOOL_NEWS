@@ -168,6 +168,7 @@ def process_category(category_data, report_dir):
     
     cat_name = category_data['category']
     tools_list = category_data['tools']
+    JST = datetime.timezone(datetime.timedelta(hours=9))
     
     with IO_LOCK:
         print(f"📦 Batch Processing: {cat_name} ({len(tools_list)} tools)...")
@@ -211,16 +212,25 @@ def process_category(category_data, report_dir):
             with IO_LOCK:
                 print(f"  ✅ News Found: {tool_name}")
 
+            # Improvement: Create unique filename using hash of URL to prevent overwriting
+            import hashlib
+            url_hash = hashlib.md5(post_url.encode()).hexdigest()[:8]
             count_str = tool_name.replace(' ', '_').replace('/', '-')
-            filename = f"{count_str}.md"
+            filename = f"{count_str}_{url_hash}.json"
             filepath = os.path.join(report_dir, filename)
             
+            # Improvement: Save as structured JSON instead of Markdown (Data Integrity)
+            report_data = {
+                "category": cat_name,
+                "tool": tool_name,
+                "summary": final_text,
+                "post_date": post_date,
+                "url": post_url,
+                "collected_at": datetime.datetime.now(JST).isoformat()
+            }
+            
             with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(f"# {cat_name} - Daily Report\n\n")
-                f.write(f"## {tool_name}\n")
-                f.write(f"- Post: {final_text}\n")
-                f.write(f"- Time: {post_date}\n")
-                f.write(f"- URL: {post_url}\n")
+                json.dump(report_data, f, ensure_ascii=False, indent=2)
 
     except Exception as e:
         with IO_LOCK:
