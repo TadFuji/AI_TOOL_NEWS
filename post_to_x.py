@@ -150,9 +150,7 @@ def main():
             
             tweet_text = f"📢 {item['tool']} Update!\n\n{item['summary']}\n\n{item['url']}\n#AI #{item['category'].replace(' ', '')}"
             
-            # User instruction: Ignore 280 char limit (X Premium support)
-            # tweet_text is used directly
-            pass
+            # Note: 280 char limit ignored (X Premium support)
 
             try:
                 # Dry run check could go here if implemented as an arg
