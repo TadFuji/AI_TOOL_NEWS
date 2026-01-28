@@ -1,102 +1,56 @@
 # AI TOOL NEWS 🚀
+**AIツールの最新動向を自動収集し、スタイリッシュに表示するニュースサイト**
 
-**Automated AI News Aggregator & Static Site Generator**
-
-[![Live Site](https://img.shields.io/badge/Live-Demo-00f2ff?style=for-the-badge&logo=github&logoColor=white)](https://TadFuji.github.io/AI_TOOL_NEWS/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![公開サイト](https://img.shields.io/badge/Live-Demo-00f2ff?style=for-the-badge&logo=github&logoColor=white)](https://TadFuji.github.io/AI_TOOL_NEWS/)
+[![ライセンス: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 [![Powered by Grok](https://img.shields.io/badge/Powered%20by-xAI%20Grok-white?style=for-the-badge&logo=x)](https://x.ai/)
 
-AI TOOL NEWS is a fully automated system that monitors official X (Twitter) accounts of major AI tools and companies, filters for significant updates using LLMs, and generates a beautiful, Glassmorphism-styled news website.
+AI TOOL NEWSは、主要なAIツールや企業の公式X（旧Twitter）アカウントを常時監視し、LLM（xAI Grok / Google Gemini）を用いて重要なアップデートのみを抽出、美しくモダンなウェブサイトとして自動公開するシステムです。
 
-🔗 **View the Live Site:** [https://TadFuji.github.io/AI_TOOL_NEWS/](https://TadFuji.github.io/AI_TOOL_NEWS/)
+🔗 **Webサイトを見る:** [https://TadFuji.github.io/AI_TOOL_NEWS/](https://TadFuji.github.io/AI_TOOL_NEWS/)
 
 ---
 
-## ✨ Features
+## ✨ 主な特徴
 
-- **Automated Collection**: Scrapes X for the latest posts from 30+ top AI accounts (OpenAI, Google DeepMind, Anthropic, etc.).
-- **Smart Filtering**: Uses **xAI Grok-4** to analyze tweets and filter out casual replies, keeping only "Newsworthy" updates.
-- **Static Site Generation**: Converts collected data into a premium static HTML site (no database required).
-- **Glassmorphism Design**: Features a modern, responsive UI with animated backgrounds and blurred glass cards.
-- **Secure**: API keys are isolated in `.env` and strictly excluded from Git history.
+- **自動収集**: OpenAI, Google DeepMind, Anthropicなど、30以上の主要アカウントを監視。
+- **スマートフィルタリング**: **xAI Grok-4** および **Google Gemini** を使用してツイートを分析。「新機能」「モデル更新」など、価値のある情報のみを厳選。
+- **モダンなデザイン**: 最新のGlassmorphism UIを採用。美しく、かつ読みやすいインターフェース。
+- **サーバーレス運用**: GitHub Actionsを活用し、データベース不要で静的サイトを生成。
 
-## 🚧 Project Boundaries & Architecture
+## 🛠️ 運用・使い方
 
-The user operates two distinct AI news systems. It is critical to maintain the separation of concerns between them.
+### 1-Click 更新（推奨）
+プロジェクト直下にある `update_news.bat` をダブルクリックするだけで、ニュースの収集からサイト更新、公開（GitHubへのプッシュ）までが完了します。
 
-| System | **AI_TOOL_NEWS** (This Project) | **ai-news-bot** (External Project) |
-| :--- | :--- | :--- |
-| **Primary Goal** | Real-time monitoring of specific AI Tool vendors on X. | Daily digest of general AI industry news via RSS. |
-| **Data Source** | **Official X Accounts** (e.g., @OpenAI, @xAI) | **RSS Feeds** (TechCrunch, The Verge, Blogs) |
-| **Frequency** | **Hourly** (Run via GitHub Actions) | **Daily** (07:00 AM JST) |
-| **Output Channels** | Website, X Account (Immediate updates) | LINE, Website, X Account (Daily Summary) |
-| **Content Tone** | **Gentle, Polite Japanese** (Automatic Translation) | Standard News Summary |
-| **Location** | `~/Desktop/Antigravity/AI_TOOL_NEWS` | `~/Desktop/Antigravity/ai-news-bot` |
-
-**DO NOT** mix RSS collection or LINE notification logic into this repository. This repository is strictly for **X-based real-time updates**.
-
-## 🛠️ Installation & Usage
-
-### Prerequisites
-- Python 3.8+
-- An xAI API Key (or compatible LLM key if you modify the script)
-
-### Setup
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/TadFuji/AI_TOOL_NEWS.git
-   cd AI_TOOL_NEWS
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements_bot.txt
-   ```
-
-3. **Configure API Key**
-   Create a `.env` file in the root directory:
-   ```env
-   XAI_API_KEY=your_xai_api_key_here
-   ```
-
-### Daily Operation
-1. **Collect News**
+### 手動での更新（エンジニア向け）
+1. **ニュースを収集する**
    ```bash
    python collect_ai_news.py
    ```
-   This will generate markdown reports in the `reports/YYYY-MM-DD/` folder.
-
-2. **Build Website**
+2. **サイトをビルドする**
    ```bash
    python build_site.py
    ```
-   This updates `docs/index.html` with the latest data.
-
-3. **Deploy**
-   Push the changes to GitHub.
+3. **公開する**
    ```bash
    git add .
-   git commit -m "Update news"
+   git commit -m "ニュース更新"
    git push
    ```
-   GitHub Pages will automatically serve the content from the `/docs` folder.
 
-## 🎯 Configuration
-You can add or remove monitoring targets by editing **`targets.json`**.
-```json
-{
-    "category": "My Custom Tools",
-    "tools": [
-        { "name": "Tool Name", "accounts": ["@OfficialAccount"] }
-    ]
-}
-```
+## 🏗️ システム構成と保守
 
-## 🤝 Contributing
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to add new tools or improve the filtering logic.
+### 重要な注意点（トラブルシューティング）
+- **レポートの蓄積**: `reports/` ディレクトリはGitの管理対象です。削除したり `.gitignore` に追加したりしないでください。ここにある過去のレポートを元にアーカイブページが生成されます。
+- **APIキーの設定**: `.env` ファイルに `XAI_API_KEY` と `GOOGLE_API_KEY` を正しく設定してください。
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### 対象の追加・変更
+監視対象は `targets.json` で管理されています。アカウントを追加したい場合は、このファイルを編集してください。
+
+## 🚧 プロジェクトの境界線
+このプロジェクトは「**X（Twitter）からのリアルタイムなツール情報収集**」に特化しています。
+RSSフィードやLINE通知など、一般的なAIニュースのダイジェストは別プロジェクトの `ai-news-bot` で扱っています。ロジックを混ぜないように注意してください。
 
 ---
 *Created by [TadFuji](https://github.com/TadFuji)*
