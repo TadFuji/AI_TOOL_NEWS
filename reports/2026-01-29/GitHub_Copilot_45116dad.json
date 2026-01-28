@@ -1,8 +1,8 @@
 {
   "category": "3. Coding & Development",
   "tool": "GitHub Copilot",
-  "summary": "- **Date**: 2024-05-24 10:00\n- **URL**: https://t.co/voS348IOoM\n- **Summary**: GitHub Copilot CLIが「Agent Client Protocol (ACP)」という新しい通信規格に対応しました。これにより、AIと各種ツールをよりスムーズにつなげられるようになります。画像を使った指示や、作業内容のリアルタイムな受け取りが可能になり、自分専用の開発環境や自動化の仕組みにAIを組み込みやすくなります。開発の自由度が広がり、日々の作業がより効率的で楽しくなるアップデートです。",
+  "summary": "- **Date**: 2024-05-24 11:00\n- **URL**: https://t.co/voS348IOoM\n- **Summary**: GitHub Copilot CLIが、AIツール同士の連携をスムーズにする新しい共通規格「Agent Client Protocol (ACP)」に対応しました。これにより、AIエージェントへの指示に画像や資料を簡単に含めたり、作業状況をリアルタイムで受け取ったりできるようになります。自分好みの開発ツールや自動化システムを、より手軽に、そして高度に作れるようになるのが大きなメリットですね。",
   "post_date": "2026-01-28 15:06",
   "url": "https://x.com/github/status/2016528407463346502",
-  "collected_at": "2026-01-29T01:35:59.116507+09:00"
+  "collected_at": "2026-01-29T02:32:31.452737+09:00"
 }
