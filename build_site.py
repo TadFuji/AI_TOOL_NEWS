@@ -428,7 +428,7 @@ def build():
         month_key = item['date'][:7] # YYYY-MM
         months[month_key].append(item)
         
-    archive_links_html = "<ul style='list-style:none; padding:0;'>"
+    archive_links_html = '<div class="archive-grid">'
     
     # Optimization: Only rebuild recent months
     JST = datetime.timezone(datetime.timedelta(hours=9))
@@ -468,9 +468,19 @@ def build():
             print(f"  -> Skipped (Cached): {filename}")
         
         # Add to Index Link (Always needed)
-        archive_links_html += f"<li style='margin:10px 0;'><a href='{filename}' style='color:white; font-size:1.2em;'>{month} ({len(items)} items)</a></li>"
+        archive_links_html += f"""
+            <a href='{filename}' class='archive-item-link'>
+                <div class='archive-card'>
+                    <div class='archive-card-content'>
+                        <i class='far fa-calendar-alt archive-icon'></i>
+                        <span class='archive-month-text'>{month}</span>
+                    </div>
+                    <div class='archive-badge'>{len(items)} items</div>
+                </div>
+            </a>
+        """
 
-    archive_links_html += "</ul>"
+    archive_links_html += "</div>"
     
     # 3. Generate Archives Index
     # Use active_archives class and show the context badge
