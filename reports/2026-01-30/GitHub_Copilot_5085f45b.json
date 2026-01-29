@@ -1,10 +1,10 @@
 {
   "category": "3. Coding & Development",
   "tool": "GitHub Copilot",
-  "summary": "GitHub Copilot CLIがModel Context Protocol（MCP）に対応しました。これにより、外部ドキュメントやツール、独自のコンテキストをCLIに直接統合できるようになります。開発環境に最適化されたAIのカスタマイズが可能になり、利便性が大幅に向上します。",
-  "why": "標準化されたプロトコルを通じて外部リソースをAIに提供できるため、プロジェクト固有の知識を用いた高度な自動化が実現します。",
+  "summary": "GitHub Copilot CLIがModel Context Protocol (MCP)に対応しました。これにより、ドキュメントや外部ツール、独自のコンテキストをCLIに直接プラグインのように組み込むことが可能になり、開発環境のカスタマイズ性が向上します。",
+  "why": "外部データやツールをシームレスに接続できる標準プロトコルへの対応により、CLI上でのAIの回答精度と実用性が大幅に強化されます。",
   "score": 4,
   "post_date": "2026-01-29 19:11",
   "url": "https://x.com/github/status/2016952281359413350",
-  "collected_at": "2026-01-30T05:29:12.132892+09:00"
+  "collected_at": "2026-01-30T06:26:35.939661+09:00"
 }
