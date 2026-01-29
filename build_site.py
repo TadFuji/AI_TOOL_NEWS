@@ -281,9 +281,6 @@ def generate_html_from_items(items, title, tool_map):
                     { '投稿を見る' if not is_suspicious else '⚠️ 検索結果 (自動修正)' }
                 </a>
                 {ref_btn}
-                <a href="{search_url}" target="_blank" class="source-link" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);">
-                    🔍 検証する
-                </a>
             </div>
         """
 
