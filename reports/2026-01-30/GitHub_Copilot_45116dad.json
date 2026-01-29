@@ -1,10 +1,10 @@
 {
   "category": "3. Coding & Development",
   "tool": "GitHub Copilot",
-  "summary": "GitHub Copilot CLIがAgent Client Protocol（ACP）を新たにサポートしました。これにより、AIエージェントとの通信が標準化され、接続の初期化やセッション作成、コンテキストを含むプロンプト送信、ストリーミング更新の受信などが可能になります。",
-  "why": "標準プロトコルの採用により、IDEやCI/CD、マルチエージェントシステムへのAI統合が容易になり、開発ワークフローの柔軟性と拡張性が飛躍的に向上するためです。",
+  "summary": "GitHub Copilot CLIがAgent Client Protocol (ACP)に対応しました。これにより、AIエージェントとの通信、セッション管理、ストリーミング更新の受信が可能になり、より高度なIDE統合やCI/CD連携が実現します。",
+  "why": "標準化されたプロトコルを通じてエージェント間の相互運用性が向上し、複雑な自動化やマルチエージェントシステムの構築が容易になります。",
   "score": 4,
   "post_date": "2026-01-28 15:06",
   "url": "https://x.com/github/status/2016528407463346502",
-  "collected_at": "2026-01-30T01:42:05.641176+09:00"
+  "collected_at": "2026-01-30T02:36:47.788014+09:00"
 }
