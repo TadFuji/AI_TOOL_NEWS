@@ -53,7 +53,47 @@ def get_twitter_client():
         return None
 
 def parse_report_file(filepath):
-    """Parses a markdown report to extract news items."""
+    """Parses a report file (Markdown or JSON) to extract news items."""
+    items = []
+    
+    if filepath.endswith('.json'):
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            tool_name = data.get('tool', 'Unknown')
+            category = data.get('category', 'AI News')
+            url = data.get('url', '')
+            summary_raw = data.get('summary', '')
+
+            # Extract clean summary from Gemini's markdown output if present
+            summary = summary_raw
+            if "**Summary**:" in summary_raw:
+                s_match = re.search(r'\*\*Summary\*\*:\s*(.*)', summary_raw, re.DOTALL)
+                if s_match:
+                    summary = s_match.group(1).strip()
+            
+            # Final cleanup
+            summary = summary.replace("**", "").replace("- ", "").strip()
+            # Remove any trailing "URL: ..." or "Date: ..." if they leaked in
+            summary = re.split(r'\n(URL|Date|Time):', summary)[0].strip()
+
+            if "No significant news found" in summary:
+                return []
+
+            if len(summary) > 5 and url.startswith("http"):
+                items.append({
+                    "tool": tool_name,
+                    "category": category,
+                    "summary": summary,
+                    "url": url,
+                    "id": url
+                })
+        except Exception as e:
+            print(f"Error parsing JSON {filepath}: {e}")
+        return items
+
+    # Legacy Markdown Parsing
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
 
@@ -64,25 +104,21 @@ def parse_report_file(filepath):
     # Split by tool sections (## ToolName)
     sections = re.split(r'^## ', content, flags=re.MULTILINE)[1:]
     
-    items = []
     for section in sections:
         lines = section.strip().split('\n')
+        if not lines: continue
         tool_name = lines[0].strip()
         body_text = "\n".join(lines[1:]).strip()
 
         # New logic: find "**Summary**:" and take the rest of the text
-        # Also find the final "- URL:" line
         summary_search = re.search(r'\*\*Summary\*\*:\s*(.*)', body_text, re.DOTALL)
         url_search = re.findall(r'- URL:\s*(https?://[^\s\n]+)', body_text)
         
         if summary_search:
-            # The summary might be followed by "Time:" or other fields, clean it up
             summary_raw = summary_search.group(1).strip()
-            # Clean up potential trailing fields if they leaked into summary
             summary = re.split(r'\n- (?:Time|URL):', summary_raw)[0].strip()
             summary = summary.replace("**", "")
 
-            # Get the last URL found in the section (usually the most accurate source)
             url = url_search[-1] if url_search else ""
             
             if len(summary) > 5 and url.startswith("http"):
@@ -100,24 +136,14 @@ def main():
     
     client = get_twitter_client()
     if not client:
-        # Exit gracefully so we don't break the build if keys are missing
         print("Skipping X posting due to missing credentials.")
         return
 
     history = load_history()
     print(f"Loaded {len(history)} previously posted items.")
     
-    # 1. Gather all news items from today's reports
-    # Assuming reports are in reports/YYYY-MM-DD/*.md
-    # Or just recursive search in reports/
     JST = datetime.timezone(datetime.timedelta(hours=9))
     today_str = datetime.datetime.now(JST).strftime("%Y-%m-%d")
-    
-    # We focus on the latest reports to avoid posting old stuff if the script runs locally
-    # But strictly speaking, the history file prevents duplicates mostly.
-    # Let's check all reports but only post if not in history.
-    # PERFORMANCE OPTIMIZATION: Only scan today and yesterday's reports.
-    # Scanning entire history (glob "*") becomes too slow over time.
     yesterday_str = (datetime.datetime.now(JST) - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
     target_dirs = [today_str, yesterday_str]
     
@@ -125,9 +151,8 @@ def main():
     for d in target_dirs:
         day_path = os.path.join(REPORTS_DIR, d)
         if os.path.exists(day_path):
-            # Tool Reports (Root of day folder)
             all_reports.extend(glob.glob(os.path.join(day_path, "*.md")))
-
+            all_reports.extend(glob.glob(os.path.join(day_path, "*.json")))
 
     new_items_count = 0
     
