@@ -115,41 +115,44 @@ h1 {
 
 /* Navigation Styles */
 nav {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 5px;
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.nav-link {
+.nav-link,
+.nav-link:visited {
     text-decoration: none;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7) !important;
     padding: 8px 25px;
     border-radius: 50px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: 1px solid transparent;
+    display: block;
 }
 
 .nav-link:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.05);
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.1);
 }
 
-/* Latest Active State: Border and Glow like the current badge */
-.nav-link.active-latest {
-    background: rgba(0, 242, 255, 0.05);
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
-    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3), inset 0 0 10px rgba(0, 242, 255, 0.1);
-    font-weight: 700;
-}
-
-/* Archives Active State: Blue text and Glow */
+/* Active State: Vibrant background for maximum visibility */
+.nav-link.active-latest,
 .nav-link.active-archives {
-    color: #00a2ff;
-    text-shadow: 0 0 10px rgba(0, 162, 255, 0.6), 0 0 20px rgba(0, 162, 255, 0.4);
+    background: var(--accent-color);
+    color: #0f3460 !important;
+    /* 暗い背景色に明るい文字ではなく、明るい背景に暗い文字でコントラストを最大化 */
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
     font-weight: 700;
 }
 
