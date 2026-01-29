@@ -345,6 +345,65 @@ nav {
     padding: 20px;
 }
 
+/* Importance Scoring & Premium Effects */
+.importance-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-left: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Score Colors */
+.score-5 {
+    color: #ffeb3b;
+    border-color: rgba(255, 235, 59, 0.4);
+    background: rgba(255, 235, 59, 0.1);
+}
+
+.score-4 {
+    color: #00f2ff;
+    border-color: rgba(0, 242, 255, 0.4);
+    background: rgba(0, 242, 255, 0.1);
+}
+
+.score-3 {
+    color: #fff;
+}
+
+/* Premium Glow for High Impact (Score 4) */
+.news-card.high-impact {
+    border-color: rgba(0, 242, 255, 0.6);
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.2), var(--glass-shadow);
+}
+
+/* Groundbreaking Effects (Score 5) */
+.news-card.groundbreaking {
+    border: 2px solid transparent;
+    background-image: linear-gradient(var(--glass-bg), var(--glass-bg)), linear-gradient(135deg, #ffeb3b, #ff9800);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: 0 0 30px rgba(255, 235, 59, 0.3), var(--glass-shadow);
+    animation: pulseGlow 4s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(255, 235, 59, 0.2), var(--glass-shadow);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(255, 235, 59, 0.5), var(--glass-shadow);
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     h1 {

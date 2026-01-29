@@ -199,22 +199,27 @@ def process_category(category_data, report_dir):
             post_date = item.get('post_date', 'Unknown Date')
             post_url = item.get('post_url', '#')
 
-            final_text = post_text
+            final_summary = post_text
+            final_why = "詳細をご確認ください。"
+            final_score = 3
             
             if len(post_text) > 20:
                 try:
                     from gemini_x_filter import filter_x_updates_with_gemini
                     gemini_result = filter_x_updates_with_gemini(post_text, tool_name)
                     
-                    # Clean up markdown markers if Gemini returned them despite instructions
-                    import re
-                    clean_text = gemini_result.strip()
-                    # Strip common labels
-                    clean_text = re.sub(r'^(?:- )?(?:Post|Time|URL|\*\*Date\*\*|\*\*Summary\*\*|\*\*URL\*\*):', '', clean_text, flags=re.IGNORECASE).strip()
-                    # Remove markdown bold/bullets
-                    clean_text = clean_text.replace("**", "").replace("- ", "").strip()
+                    if gemini_result is None:
+                        # No functional news found
+                        continue
                     
-                    final_text = clean_text
+                    if "error" in gemini_result:
+                        with IO_LOCK:
+                            print(f"  ⚠️ Gemini Skip: {gemini_result['error']}")
+                        final_summary = post_text
+                    else:
+                        final_summary = gemini_result.get('summary', post_text)
+                        final_why = gemini_result.get('why', final_why)
+                        final_score = gemini_result.get('score', 3)
                 except ImportError:
                     pass
 
@@ -232,7 +237,9 @@ def process_category(category_data, report_dir):
             report_data = {
                 "category": cat_name,
                 "tool": tool_name,
-                "summary": final_text,
+                "summary": final_summary,
+                "why": final_why,
+                "score": final_score,
                 "post_date": post_date,
                 "url": post_url,
                 "collected_at": datetime.datetime.now(JST).isoformat()

@@ -143,7 +143,7 @@ def parse_report_file(filepath):
             if not summary or summary == "":
                 continue
             
-            why = "Check details." 
+            why = "詳細をご確認ください。" 
             
             # Add extracted URLs to a reference field if not the X URL
             ref_url = ext_urls[0] if ext_urls and ext_urls[0] != url else None
@@ -287,11 +287,22 @@ def generate_html_from_items(items, title, tool_map):
             </div>
         """
 
+        # Define score-based styling
+        score = int(item.get('score', 3))
+        impact_class = ""
+        if score >= 5: impact_class = "groundbreaking"
+        elif score >= 4: impact_class = "high-impact"
+        
+        # Build stars for importance
+        stars = ""
+        if score >= 4:
+            stars = f'<span class="importance-badge score-{score}"><i class="fas fa-star"></i> Focus</span>'
+
         card = f"""
-        <div class="news-card">
+        <div class="news-card {impact_class}">
             <div class="news-header">
                 <div class="tool-name">
-                    {item['tool']} 
+                    {item['tool']} {stars}
                 </div>
                 <div class="post-date" style="font-size:0.75em; color:#888; margin-top:2px;">
                     <i class="far fa-clock"></i> {item['display_date']}
@@ -345,8 +356,9 @@ def load_all_reports():
                     "category": data.get('category', 'Uncategorized'),
                     "tool": data.get('tool', 'Unknown'),
                     "summary": clean_text,
+                    "why": data.get('why', '詳細をご確認ください。'),
+                    "score": data.get('score', 3),
                     "ref_url": ref_url,
-                    "why": "Check details.",
                     "url": url_main,
                 }
                 
