@@ -1,8 +1,8 @@
 {
   "category": "2. Google Ecosystem & Labs",
   "tool": "Google AI Studio",
-  "summary": "- **Date**: 2024-09-19 11:00\n- **URL**: https://developers.googleblog.com/litert-the-universal-framework-for-on-device-ai/\n- **Summary**: Googleは、デバイス上でAIを動かすための新フレームワーク「LiteRT」を発表しました。GPU性能が1.4倍向上し、PyTorchやJAXもサポートされています。これにより、Gemmaなどの最新AIモデルをスマホやPC上でより高速かつスムーズに動作させることが可能になります。開発者だけでなく、ユーザーにとっても手元のデバイスでAIがよりサクサク快適に動くようになる、非常に嬉しいアップデートです。",
+  "summary": "Googleから、デバイス上でAIを動かすための新しい仕組み「LiteRT」が登場しました。計算の速度が以前より1.4倍速くなり、スマートフォンなどでAIがよりスムーズに動くようになります。主要な開発ツールとの連携も強化され、最新のAIモデル「Gemma」などをアプリに組み込むのが簡単になりました。これにより、開発者の方はより快適なAI体験を、多くのユーザーへ手軽に届けられるようになります。",
   "post_date": "2026-01-28 21:12",
   "url": "https://x.com/googledevs/status/2016620324641518030",
-  "collected_at": "2026-01-29T07:25:16.531105+09:00"
+  "collected_at": "2026-01-29T13:06:46.916767+09:00"
 }
