@@ -1,10 +1,10 @@
 {
   "category": "6. Creative",
   "tool": "Black Forest Labs (FLUX.1)",
-  "summary": "Black Forest LabsのFLUXを、AIエージェントやIDEに1コマンドで導入できる「BFL Skills」が公開されました。Claude CodeやCursor等に対応し、高速な[klein]や高品質な[max]といったモデルを自動で統合・利用可能です。",
-  "why": "エージェントへのAPI統合やプロンプト管理が自動化され、開発環境内での画像生成や編集がよりシームレスかつ高速に行えるようになります。",
+  "summary": "Black Forest Labsが「BFL Skills」を発表し、FLUXをコーディングエージェントへ統合する単一コマンドを提供しました。Claude CodeやCursor等のIDEで、モデル選択やAPI連携を自動化し、[klein]による高速生成や[max]による高画質生成が直接利用可能になります。",
+  "why": "複雑なAPI設定なしに開発環境へ画像生成機能を即座に組み込めるため、AIエージェントを活用した開発プロセスの自動化が加速します。",
   "score": 3,
   "post_date": "2026-01-26 17:20",
   "url": "https://x.com/bfl_ml/status/2015837275100426258",
-  "collected_at": "2026-01-29T19:37:20.604146+09:00"
+  "collected_at": "2026-01-29T21:55:52.940502+09:00"
 }
