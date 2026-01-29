@@ -54,4 +54,12 @@ AI TOOL NEWSは、主要なAIツールや企業の公式X（旧Twitter）アカ�
 このプロジェクトは「**X（Twitter）からのリアルタイムなツール情報収集**」に特化しています。
 
 ---
+## 🤖 AI Agent Instructions
+このプロジェクトは **GitHub Actions により1時間おきに自動更新** (Bot Run Output) されます。
+AIエージェントがプログラムの修正やUIの変更をプッシュする際は、以下のルールを厳守してください。
+
+1. **プッシュ前の同期**: 自身の変更をプッシュする前に、必ず `git pull --rebase origin main` を実行してGitHub側の最新ニュースを取り込んでください。
+2. **ワークフローの活用**: `.agent/workflows/push.md` に定義された `/push` コマンドを使用することで、安全に同期とデプロイ確認を行うことができます。
+
+---
 *Created by [TadFuji](https://github.com/TadFuji)*
