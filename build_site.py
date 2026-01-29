@@ -29,10 +29,9 @@ HTML_HEADER = """
     <div class="container">
         <header>
             <h1>AI TOOL NEWS</h1>
-            <div class="date-badge"><i class="far fa-calendar-alt"></i> {page_title}</div>
-            <nav style="margin-top: 15px;">
-                <a href="index.html" style="color:white; margin-right:15px; text-decoration:none;">Latest</a>
-                <a href="archives.html" style="color:white; text-decoration:none;">Archives</a>
+            <nav>
+                <a href="index.html" class="nav-link {active_latest}">Latest</a>
+                <a href="archives.html" class="nav-link {active_archives}">Archives</a>
             </nav>
         </header>
 
@@ -210,6 +209,10 @@ def generate_html_from_items(items, title, tool_map):
     """Generates full HTML page from a list of news items."""
     content_html = ""
     
+    # Determine active tab classes
+    active_latest = "active-latest" if "Latest" in title else ""
+    active_archives = "active-archives" if "Archive" in title else ""
+    
     # Sort items by Date (Newest first), then by Category
     # Use sort_date for full precision
     items.sort(key=lambda x: x.get('sort_date', x['date']), reverse=True)
@@ -306,7 +309,14 @@ def generate_html_from_items(items, title, tool_map):
     if not content_html:
         content_html = "<div class='no-news'>期間内のニュースは見つかりませんでした。</div>"
         
-    return HTML_HEADER.format(page_title=title) + content_html + HTML_FOOTER
+    # If it's the latest page, the navigation link already shows the status clearly.
+    # Hide the redundant date-badge for the index page.
+    badge_html = ""
+    # Only show badge if it provides extra context (like archive month)
+    if "Latest" not in title:
+        badge_html = f'<div style="text-align:center; margin-bottom:40px;"><div class="date-badge"><i class="far fa-calendar-alt"></i> {title}</div></div>'
+
+    return HTML_HEADER.format(active_latest=active_latest, active_archives=active_archives) + badge_html + content_html + HTML_FOOTER
 
 def load_all_reports():
     """Scans for both legacy .md and new .json reports and parses them efficiently."""
@@ -418,7 +428,7 @@ def build():
         month_key = item['date'][:7] # YYYY-MM
         months[month_key].append(item)
         
-    archive_links_html = "<h2>Monthly Archives</h2><ul style='list-style:none; padding:0;'>"
+    archive_links_html = "<ul style='list-style:none; padding:0;'>"
     
     # Optimization: Only rebuild recent months
     JST = datetime.timezone(datetime.timedelta(hours=9))
@@ -463,7 +473,9 @@ def build():
     archive_links_html += "</ul>"
     
     # 3. Generate Archives Index
-    archives_page = HTML_HEADER.format(page_title="Archives") + archive_links_html + HTML_FOOTER
+    # Use active_archives class and show the context badge
+    badge_html = '<div style="text-align:center; margin-bottom:40px;"><div class="date-badge"><i class="far fa-calendar-alt"></i> Select Month</div></div>'
+    archives_page = HTML_HEADER.format(active_latest="", active_archives="active-archives") + badge_html + archive_links_html + HTML_FOOTER
     with open(os.path.join(DOCS_DIR, "archives.html"), 'w', encoding='utf-8') as f:
         f.write(archives_page)
     print("Generated archives.html")
