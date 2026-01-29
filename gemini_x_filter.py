@@ -38,11 +38,13 @@ CRITERIA (Strictly Enforced):
    - Generic hype/Marketing ("We represent the future of AI")
    - User opinions/Memes
 
-OUTPUT FORMAT (Markdown):
-If valid functional news is found, summarize it in **GENTLE, POLITE, AND EASY-TO-UNDERSTAND JAPANESE (Desu/Masu tone)**.
-- **Date**: YYYY-MM-DD HH:MM (Extract roughly from text if available, otherwise current date)
-- **URL**: (Extract the Tweet URL if present in text, otherwise leave empty)
-- **Summary**: (Write a clear, kind, and simple explanation of what the feature does AND why it benefits the user, in Japanese. ~200 chars. Use "Desu/Masu". Explain technical terms simply. Include the user benefit naturally in the explanation.)
+OUTPUT FORMAT (TEXT ONLY):
+If valid functional news is found, provide ONLY a clear, polite summary in **GENTLE, POLITE, AND EASY-TO-UNDERSTAND JAPANESE (Desu/Masu tone)**.
+- Start directly with the summary text.
+- Do NOT include labels like "Summary:", "Date:", or "URL:".
+- Length: ~200 characters.
+- Explain technical terms simply.
+- Include the user benefit naturally.
 
 If NO functional news is found, output exactly: 'No significant news found'.
     """

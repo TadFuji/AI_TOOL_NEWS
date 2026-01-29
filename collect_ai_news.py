@@ -205,7 +205,16 @@ def process_category(category_data, report_dir):
                 try:
                     from gemini_x_filter import filter_x_updates_with_gemini
                     gemini_result = filter_x_updates_with_gemini(post_text, tool_name)
-                    final_text = gemini_result
+                    
+                    # Clean up markdown markers if Gemini returned them despite instructions
+                    import re
+                    clean_text = gemini_result.strip()
+                    # Strip common labels
+                    clean_text = re.sub(r'^(?:- )?(?:Post|Time|URL|\*\*Date\*\*|\*\*Summary\*\*|\*\*URL\*\*):', '', clean_text, flags=re.IGNORECASE).strip()
+                    # Remove markdown bold/bullets
+                    clean_text = clean_text.replace("**", "").replace("- ", "").strip()
+                    
+                    final_text = clean_text
                 except ImportError:
                     pass
 

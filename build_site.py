@@ -50,6 +50,27 @@ HTML_FOOTER = """
 </html>
 """
 
+def clean_summary_text(text, url=None, date=None):
+    """Clean up markdown markers and redundant info from summary text."""
+    summary_lines = []
+    for line in text.split('\n'):
+        # Strip out the markers but keep the text
+        # Markers to check: - Post:, - Time:, - URL:, - **Date**:, - **Summary**:, - **URL**:
+        clean_line = line.strip()
+        clean_line = re.sub(r'^(?:- )?(?:Post|Time|URL|\*\*Date\*\*|\*\*Summary\*\*|\*\*URL\*\*):', '', clean_line).strip()
+        
+        if clean_line:
+            # If the cleaned line is just a URL we already have, or just the date we have, skip it to avoid clutter
+            if (url and clean_line == url) or (date and clean_line == date):
+                continue
+            summary_lines.append(clean_line)
+    
+    summary = " ".join(summary_lines).strip()
+    # Clean up ** wrappers if present
+    summary = summary.replace("**", "").strip()
+    summary = summary.replace("\n", " ").replace("  ", " ")
+    return summary
+
 def parse_report_file(filepath):
     """Parses a markdown report and returns a list of news items (dicts)."""
     items = []
@@ -109,32 +130,11 @@ def parse_report_file(filepath):
             elif url_match_sub:
                 url = url_match_sub.group(1).strip()
             
-            # Parse Summary
-            # We want everything that ISN'T a Date/Time/URL marker line,
-            # but we also want the content AFTER the markers if it was on the same line.
-            summary_lines = []
-            for line in block.split('\n'):
-                # If the line contains a marker, try to extract the content if it's there
-                # Markers to check: - Post:, - Time:, - URL:, - **Date**:, - **Summary**:, - **URL**:
-                clean_line = line.strip()
-                
-                # Strip out the markers but keep the text
-                clean_line = re.sub(r'^(?:- )?(?:Post|Time|URL|\*\*Date\*\*|\*\*Summary\*\*|\*\*URL\*\*):', '', clean_line).strip()
-                
-                if clean_line:
-                    # If the cleaned line is just a URL we already have, or just the date we have, skip it to avoid clutter
-                    if clean_line == url or clean_line == item_date_raw:
-                        continue
-                    summary_lines.append(clean_line)
-            
-            summary = " ".join(summary_lines).strip()
-            # Clean up ** wrappers if present
-            summary = summary.replace("**", "").strip()
+            # Use helper to clean summary
+            summary = clean_summary_text(block, url=url, date=item_date_raw)
             
             if not summary or summary == "":
                 continue
-
-            summary = summary.replace("\n", " ").replace("  ", " ")
             why = "Check details." 
 
             # Date Processing
@@ -313,7 +313,7 @@ def load_all_reports():
                     "raw_date": item_date_raw,
                     "category": data.get('category', 'Uncategorized'),
                     "tool": data.get('tool', 'Unknown'),
-                    "summary": data.get('summary', ''),
+                    "summary": clean_summary_text(data.get('summary', ''), url=data.get('url'), date=item_date_raw),
                     "why": "Check details.",
                     "url": data.get('url', '#'),
                 }
