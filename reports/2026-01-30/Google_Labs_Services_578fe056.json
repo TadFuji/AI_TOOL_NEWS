@@ -1,10 +1,10 @@
 {
   "category": "2. Google Ecosystem & Labs",
   "tool": "Google Labs Services",
-  "summary": "Google Labsより、テキストや画像プロンプトからリアルタイムに多様な仮想世界を生成・探索できる新実験「Project Genie」が公開されました。現在は米国のGoogle AI Ultra加入者を対象にロールアウトされています。",
-  "why": "静止画やテキストから即座に拡張可能なインタラクティブ空間を生成できる技術であり、生成AIによるエンターテインメントやシミュレーションの可能性を大きく広げます。",
+  "summary": "Google Labsより、画像やテキストからリアルタイムで仮想空間を生成・探索できる「Project Genie」が発表されました。現在は米国のGoogle AI Ultraユーザー向けに順次公開されています。",
+  "why": "プロンプトに基づき動的な世界を即座に構築する技術で、生成AIによるインタラクティブな体験を新たな次元へ引き上げる重要なアップデートです。",
   "score": 4,
   "post_date": "2026-01-29 17:14",
   "url": "https://x.com/GoogleLabs/status/2016922876059013255",
-  "collected_at": "2026-01-30T03:42:22.271790+09:00"
+  "collected_at": "2026-01-30T04:29:48.217616+09:00"
 }
