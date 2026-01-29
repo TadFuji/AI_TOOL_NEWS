@@ -41,6 +41,8 @@ CRITERIA (Strictly Enforced):
 OUTPUT FORMAT (TEXT ONLY):
 If valid functional news is found, provide ONLY a clear, polite summary in **GENTLE, POLITE, AND EASY-TO-UNDERSTAND JAPANESE (Desu/Masu tone)**.
 - Start directly with the summary text.
+- **IMPORTANT**: DO NOT include any Dates (YYYY-MM-DD or similar).
+- **IMPORTANT**: DO NOT include any URLs.
 - Do NOT include labels like "Summary:", "Date:", or "URL:".
 - Length: ~200 characters.
 - Explain technical terms simply.

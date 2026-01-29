@@ -51,28 +51,39 @@ HTML_FOOTER = """
 """
 
 def clean_summary_text(text, url=None, date=None):
-    """Clean up markdown markers and redundant info from summary text."""
+    """Clean up markdown markers, redundant info, dates, and URLs from summary text."""
+    # 1. Extract embedded URLs from the text before cleaning
+    embedded_urls = re.findall(r'https?://\S+', text)
+    
     summary_lines = []
     for line in text.split('\n'):
-        # Strip out the markers but keep the text
-        # Markers to check: - Post:, - Time:, - URL:, - **Date**:, - **Summary**:, - **URL**:
+        # Strip out the markers
         clean_line = line.strip()
-        clean_line = re.sub(r'^(?:- )?(?:Post|Time|URL|\*\*Date\*\*|\*\*Summary\*\*|\*\*URL\*\*):', '', clean_line).strip()
+        clean_line = re.sub(r'^(?:- )?(?:Post|Time|URL|\*\*Date\*\*|\*\*Summary\*\*|\*\*URL\*\*):', '', clean_line, flags=re.IGNORECASE).strip()
         
         if clean_line:
-            # If the cleaned line is just a URL we already have, or just the date we have, skip it to avoid clutter
+            # Skip if line is JUST a date or JUST a URL
             if (url and clean_line == url) or (date and clean_line == date):
                 continue
-            summary_lines.append(clean_line)
+            
+            # Remove date patterns like YYYY-MM-DD HH:MM
+            clean_line = re.sub(r'\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2})?', '', clean_line).strip()
+            
+            # Remove URLs from the text line
+            clean_line = re.sub(r'https?://\S+', '', clean_line).strip()
+            
+            if clean_line:
+                summary_lines.append(clean_line)
     
     summary = " ".join(summary_lines).strip()
-    # Clean up ** wrappers if present
+    # Clean up ** wrappers
     summary = summary.replace("**", "").strip()
     summary = summary.replace("\n", " ").replace("  ", " ")
-    return summary
+    
+    return summary, embedded_urls
 
 def parse_report_file(filepath):
-    """Parses a markdown report and returns a list of news items (dicts)."""
+    """Parses a markdown report and returns a list of news items (dicts).."""
     items = []
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -93,7 +104,7 @@ def parse_report_file(filepath):
         if "No recent posts" in body_text or "Updates not found" in body_text or "No significant news found" in body_text or body_text.strip() == "":
             continue
 
-        # Split by "- Post:" to support multiple posts per tool
+        # Split by "- Post:"
         post_blocks = []
         if "- Post:" in body_text:
             raw_chunks = body_text.split("- Post:")
@@ -108,8 +119,6 @@ def parse_report_file(filepath):
                 continue
                 
             # Parse Date
-            # Prefer "Time:" (actual post time) over "**Date**:" (often historical/hallucinated in summary)
-            # Find all occurrences and pick the best one
             time_match = re.search(r'(?:- )?Time:? (.*)', block)
             date_match = re.search(r'(?:- )?\*\*Date\*\*:? (.*)', block)
             
@@ -120,7 +129,6 @@ def parse_report_file(filepath):
                 item_date_raw = date_match.group(1).strip()
             
             # Parse URL
-            # Prefer actual "URL:" over "**URL**:" inside summary
             url_match_main = re.search(r'(?:- )?URL:? (https?://\S+)', block)
             url_match_sub = re.search(r'(?:- )?\*\*URL\*\*:? (https?://\S+)', block)
             
@@ -131,11 +139,15 @@ def parse_report_file(filepath):
                 url = url_match_sub.group(1).strip()
             
             # Use helper to clean summary
-            summary = clean_summary_text(block, url=url, date=item_date_raw)
+            summary, ext_urls = clean_summary_text(block, url=url, date=item_date_raw)
             
             if not summary or summary == "":
                 continue
+            
             why = "Check details." 
+            
+            # Add extracted URLs to a reference field if not the X URL
+            ref_url = ext_urls[0] if ext_urls and ext_urls[0] != url else None
 
             # Date Processing
             display_date = item_date_raw
@@ -172,6 +184,7 @@ def parse_report_file(filepath):
                 "summary": summary,
                 "why": why,
                 "url": url,
+                "ref_url": ref_url,
                 "raw_text": block
             })
 
@@ -245,23 +258,29 @@ def generate_html_from_items(items, title, tool_map):
         search_query = f"from:{primary_account}"
         search_url = f"https://x.com/search?q={search_query}&src=typed_query&f=live"
 
-        # Static Validation of Primary URL
+        # Primary URL from X
         valid_url = item['url']
         is_suspicious = False
         
         if not tweet_pattern.match(valid_url):
             is_suspicious = True
-            # If invalid/suspicious, we can strictly replace it OR just rely on the user.
-            # Decision: Keep the link but style it differently or just rely on fallback?
-            # User request: "Rewrite valid URL... if suspicious... to search result page"
-            # Let's replace it to be safe.
             valid_url = search_url
             
+        # Optional Reference URL (extracted from text)
+        ref_btn = ""
+        if item.get('ref_url'):
+            ref_btn = f"""
+                <a href="{item['ref_url']}" target="_blank" class="source-link" style="background: rgba(0,242,255,0.1); border: 1px solid var(--accent-color); color: var(--accent-color);">
+                    <i class="fas fa-external-link-alt"></i> 参照資料
+                </a>
+            """
+
         card_buttons = f"""
-            <div class="news-footer" style="display: flex; gap: 10px;">
+            <div class="news-footer" style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <a href="{valid_url}" target="_blank" class="source-link">
                     { '投稿を見る' if not is_suspicious else '⚠️ 検索結果 (自動修正)' }
                 </a>
+                {ref_btn}
                 <a href="{search_url}" target="_blank" class="source-link" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);">
                     🔍 検証する
                 </a>
@@ -308,14 +327,21 @@ def load_all_reports():
                 # Normalize JSON data to the item format
                 # Note: We still use the date processing logic inside our build
                 item_date_raw = data.get('post_date', 'Unknown Date')
+                summary_raw = data.get('summary', '')
+                url_main = data.get('url', '#')
                 
+                # Use helper for consistency
+                clean_text, ext_urls = clean_summary_text(summary_raw, url=url_main, date=item_date_raw)
+                ref_url = ext_urls[0] if ext_urls and ext_urls[0] != url_main else None
+
                 item = {
                     "raw_date": item_date_raw,
                     "category": data.get('category', 'Uncategorized'),
                     "tool": data.get('tool', 'Unknown'),
-                    "summary": clean_summary_text(data.get('summary', ''), url=data.get('url'), date=item_date_raw),
+                    "summary": clean_text,
+                    "ref_url": ref_url,
                     "why": "Check details.",
-                    "url": data.get('url', '#'),
+                    "url": url_main,
                 }
                 
                 # Apply date logic
@@ -422,10 +448,13 @@ def build():
         # Build if:
         # 1. It is a target month (Current/Prev)
         # 2. File doesn't exist yet (New historical import?)
-        # 3. Always force build if user manually flushes (not implemented, but safe default)
+        # 3. Forced re-build (Environment variable or flag)
         
-        if month in targets_to_build or not os.path.exists(filepath):
-            month_html = generate_html_from_items(items, f"Archive: {month}", tool_map)
+        force_rebuild = os.environ.get("FORCE_REBUILD") == "true"
+        
+        if month in targets_to_build or not os.path.exists(filepath) or force_rebuild:
+            month_items = sorted(items, key=lambda x: x.get('sort_date', x['date']), reverse=True)
+            month_html = generate_html_from_items(month_items, f"Archive: {month}", tool_map)
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(month_html)
             print(f"  -> Rebuilt: {filename}")
