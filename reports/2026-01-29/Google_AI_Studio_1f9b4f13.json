@@ -1,8 +1,10 @@
 {
   "category": "2. Google Ecosystem & Labs",
   "tool": "Google AI Studio",
-  "summary": "No significant news found.",
+  "summary": "Googleより、デバイス上でAIを効率的に動作させる新基盤「LiteRT」が公開されました。従来比で計算速度が1.4倍向上し、スマートフォン等での動作が高速化しています。また、最新モデル「Gemma」のアプリ組み込みもより容易になりました。",
   "post_date": "2026-01-28 21:12",
   "url": "https://x.com/googledevs/status/2016620324641518030",
-  "collected_at": "2026-01-29T13:25:21.867779+09:00"
+  "collected_at": "2026-01-29T13:06:46.916767+09:00",
+  "why": "オンデバイス実行のパフォーマンス向上と開発フローの簡略化により、高品質かつ低遅延なAI体験をアプリへ実装しやすくなります。",
+  "score": 4
 }

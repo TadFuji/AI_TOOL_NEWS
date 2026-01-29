@@ -345,6 +345,67 @@ nav {
     padding: 20px;
 }
 
+/* Importance Tag - Premium Redesign */
+.importance-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 4px;
+    /* クリスプな高級感のために少し角を立てる */
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-left: 12px;
+    vertical-align: middle;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Score 5: "GROUNDBREAKING" - Gold Gradient */
+.score-5-tag {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000;
+    border: none;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+/* Score 4: "PICK UP" - Vivid Magenta to Purple */
+.score-4-tag {
+    background: linear-gradient(135deg, #FF00CC, #333399);
+    color: #fff;
+    border: none;
+    box-shadow: 0 0 15px rgba(255, 0, 204, 0.3);
+}
+
+/* Premium Glow for High Impact (Score 4) */
+.news-card.high-impact {
+    border-color: rgba(255, 0, 204, 0.4);
+    box-shadow: 0 0 20px rgba(255, 0, 204, 0.1), var(--glass-shadow);
+}
+
+/* Groundbreaking Effects (Score 5) */
+.news-card.groundbreaking {
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    background-image: linear-gradient(var(--glass-bg), var(--glass-bg)), linear-gradient(135deg, #FFD700, #FFA500);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.2), var(--glass-shadow);
+    animation: pulseGlow 4s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.1), var(--glass-shadow);
+    }
+
+    50% {
+        box-shadow: 0 0 50px rgba(255, 215, 0, 0.4), var(--glass-shadow);
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     h1 {

@@ -1,17 +1,19 @@
 import os
+import json
+import re
 from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
 
-def filter_x_updates_with_gemini(raw_text: str, tool_name: str) -> str:
+def filter_x_updates_with_gemini(raw_text: str, tool_name: str) -> dict:
     """
     Filters and summarizes X updates using Gemini 3 Flash Preview.
-    Strictly adheres to 'Tool Functional Updates' criteria.
+    Returns a dictionary with 'summary' and 'why', or None if no news found.
     """
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key:
-        return "Error: GOOGLE_API_KEY not found."
+        return {"error": "GOOGLE_API_KEY not found."}
 
     client = genai.Client(api_key=api_key)
 
@@ -32,23 +34,29 @@ CRITERIA (Strictly Enforced):
    - Bug fixes or performance boosts
    - Service status (e.g., "Outages resolved")
 2. **EXCLUDE (Noise)**:
-   - Funding/Financial news (e.g., "Raised $10M")
-   - Corporate partnership announcements (unless a feature is released immediately)
-   - Hiring/Job posts
-   - Generic hype/Marketing ("We represent the future of AI")
-   - User opinions/Memes
+   - Funding/Financial news, corporate partnerships, hiring, generic marketing, or user opinions.
 
-OUTPUT FORMAT (TEXT ONLY):
-If valid functional news is found, provide ONLY a clear, polite summary in **GENTLE, POLITE, AND EASY-TO-UNDERSTAND JAPANESE (Desu/Masu tone)**.
-- Start directly with the summary text.
-- **IMPORTANT**: DO NOT include any Dates (YYYY-MM-DD or similar).
-- **IMPORTANT**: DO NOT include any URLs.
-- Do NOT include labels like "Summary:", "Date:", or "URL:".
-- Length: ~200 characters.
-- Explain technical terms simply.
-- Include the user benefit naturally.
+OUTPUT FORMAT (STRICT JSON ONLY):
+If valid functional news is found, return a JSON object with exactly three keys:
+1. "summary": A clear, polite summary in GENTLE, POLITE JAPANESE (Desu/Masu tone). ~150 characters.
+2. "why": A technical insight or user benefit explanation. Why is this update significant? ~100 characters.
+3. "score": An integer (1-5) representing the importance of this news:
+   - 5: Groundbreaking (e.g., Major model release like GPT-5, paradigm shift).
+   - 4: Major Update (e.g., New significant feature, big performance boost).
+   - 3: Standard Update (e.g., Improved UI, minor new tools).
+   - 2: Minor/Maintenance (e.g., Small bug fixes, documentation).
+   - 1: Very subtle changes.
 
-If NO functional news is found, output exactly: 'No significant news found'.
+If NO functional news is found, return exactly: {{"has_news": false}}
+
+Example output:
+{{
+  "summary": "Google AI Studioにおいて、Gemini 1.5 Proのコンテキストウィンドウが大幅に拡張されました。",
+  "why": "より長いコードや膨大なドキュメントを一度に処理できるようになり、開発効率が劇的に向上します。",
+  "score": 5
+}}
+
+Return ONLY the JSON. No markdown fencing.
     """
 
     try:
@@ -56,6 +64,20 @@ If NO functional news is found, output exactly: 'No significant news found'.
             model="gemini-3-flash-preview", 
             contents=prompt
         )
-        return response.text.strip()
+        text = response.text.strip()
+        
+        # Remove markdown fencing if present
+        clean_json = re.sub(r'```json\s*|\s*```', '', text)
+        data = json.loads(clean_json)
+        
+        if data.get("has_news") is False:
+            return None
+            
+        return {
+            "summary": data.get("summary", ""),
+            "why": data.get("why", "詳細をご確認ください。"),
+            "score": int(data.get("score", 3))
+        }
     except Exception as e:
-        return f"Error: Gemini processing failed: {e}"
+        print(f"    ⚠️ Gemini Error: {e}")
+        return {"error": str(e)}
