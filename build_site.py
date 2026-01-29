@@ -289,7 +289,6 @@ def generate_html_from_items(items, title, tool_map):
             <div class="news-header">
                 <div class="tool-name">
                     {item['tool']} 
-                    <span style="font-size:0.8em; font-weight:400; color:#aaa; margin-left:10px;">({item['category']})</span>
                 </div>
                 <div class="post-date" style="font-size:0.75em; color:#888; margin-top:2px;">
                     <i class="far fa-clock"></i> {item['display_date']}
