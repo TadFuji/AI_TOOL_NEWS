@@ -1,10 +1,10 @@
 {
   "category": "4. Key AI Companies",
   "tool": "OpenAI",
-  "summary": "OpenAIは、有料プランのユーザーを対象に、iOSおよびAndroidアプリでも推論レベル（Thinking level）を調整できる機能をリリースしました。Web版に続き、モバイル端末でも「Light」「Standard」「Extended」「Heavy」の4段階から、思考の深さを手動で選択可能になりました。",
-  "why": "モバイル環境でも、回答の速さと推論の深さをユーザーの用途に合わせて柔軟に制御できるようになったため、活用の幅が広がります。",
-  "score": 4,
+  "summary": "有料ユーザー向けに、iOSおよびAndroidアプリでも「思考レベル」の調整が可能になりました。Web版と同様に、入力欄の「Thinking」からLight、Standard、Extended、Heavyの4段階を自由に選択できます。",
+  "why": "外出先などのモバイル環境でも、タスクの難易度に応じてAIの推論時間を制御できるようになり、利便性が大幅に向上します。",
+  "score": 3,
   "post_date": "2026-01-29 20:30",
   "url": "https://x.com/OpenAI/status/2016972315784061007",
-  "collected_at": "2026-01-31T10:10:54.812220+09:00"
+  "collected_at": "2026-01-31T10:16:48.167406+09:00"
 }
