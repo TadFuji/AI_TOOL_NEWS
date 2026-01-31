@@ -1,0 +1,10 @@
+{
+  "category": "3. Coding & Development",
+  "tool": "Hugging Face",
+  "summary": "Hugging Faceより、モデルエンドポイントやGradio、関数を視覚的に組み合わせてAIアプリを構築できる新しいツール「daggr」が登場しました。",
+  "why": "パイプラインの視覚的な確認とプログラム制御を両立しており、複雑なアプリ構築の効率と透明性が大幅に向上します。",
+  "score": 3,
+  "post_date": "2026-01-29 19:09",
+  "url": "https://x.com/huggingface/status/2016951917931303159",
+  "collected_at": "2026-02-01T00:22:29.206256+09:00"
+}

@@ -1,0 +1,10 @@
+{
+  "category": "4. Key AI Companies",
+  "tool": "OpenAI",
+  "summary": "OpenAIの有料ユーザーを対象に、iOSおよびAndroidアプリで「思考レベル（Thinking level）」の調整が可能になりました。チャット入力欄の「Thinking」から、Light、Standard、Extended、Heavyの4段階を選択でき、用途に合わせた推論精度の調整が可能です。",
+  "why": "モバイル環境でもタスクの難易度に合わせて推論リソースを最適化できるようになったため、利便性と精度のバランス調整が容易になります。",
+  "score": 3,
+  "post_date": "2026-01-29 20:30",
+  "url": "https://x.com/OpenAI/status/2016972315784061007",
+  "collected_at": "2026-02-01T00:22:33.882498+09:00"
+}
