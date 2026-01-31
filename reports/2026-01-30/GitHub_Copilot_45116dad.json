@@ -1,0 +1,10 @@
+{
+  "category": "3. Coding & Development",
+  "tool": "GitHub Copilot",
+  "summary": "GitHub Copilot CLIがAgent Client Protocol（ACP）に対応しました。AIエージェントとの接続初期化やセッション管理、リソースの共有が可能になり、開発ワークフローの柔軟性が向上します。",
+  "why": "ACPへの対応により、独自のIDE統合やCI/CD、マルチエージェント環境の構築が標準化されたプロトコルで容易になります。",
+  "score": 4,
+  "post_date": "2026-01-28 15:06",
+  "url": "https://x.com/github/status/2016528407463346502",
+  "collected_at": "2026-01-30T03:43:01.559179+09:00"
+}
