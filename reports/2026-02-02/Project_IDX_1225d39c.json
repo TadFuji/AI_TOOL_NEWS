@@ -1,10 +1,10 @@
 {
   "category": "2. Google Ecosystem & Labs",
   "tool": "Project IDX",
-  "summary": "Google AI ProおよびUltraのサブスクリプションに、Google Developer Programのプレミアム特典が追加されました。これにより、Project IDXにおいてより高性能なリソースや拡張機能が利用可能になります。",
-  "why": "開発環境の計算リソース制限が緩和され、プロトタイプから本番環境への移行をより迅速かつ円滑に進めることが可能になります。",
+  "summary": "Google AI ProおよびUltraのサブスクリプションに、Google Developer Programのプレミアム特典が統合されました。これにより、Project IDXを通じたアプリ開発において、より強力なリソースとスケーリング機能が利用可能になります。",
+  "why": "有料プランの特典として開発環境の機能が拡張されたことで、プロトタイプから本番環境への移行コストと技術的障壁が大幅に低減されます。",
   "score": 3,
   "post_date": "2026-01-30 14:00",
   "url": "https://x.com/googledevs/status/2017236357152645177",
-  "collected_at": "2026-02-02T08:22:32.736332+09:00"
+  "collected_at": "2026-02-02T19:42:20.684573+09:00"
 }
