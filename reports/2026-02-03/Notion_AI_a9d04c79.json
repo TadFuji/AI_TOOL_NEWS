@@ -1,0 +1,10 @@
+{
+  "category": "7. Others",
+  "tool": "Notion AI",
+  "summary": "Notion AIがMCP（Model Context Protocol）に対応し、外部ツールと連携可能なカスタムエージェントの構築が可能になりました。これにより、セキュリティ調査などの複雑なワークフローを自動化できます。",
+  "why": "MCPのサポートによりNotion AIが外部データやツールを直接操作できるようになったため、情報の集約から意思決定までのスピードが飛躍的に向上します。",
+  "score": 4,
+  "post_date": "2026-02-02 21:38",
+  "url": "https://x.com/NotionHQ/status/2018438842878230556",
+  "collected_at": "2026-02-03T08:18:49.284351+09:00"
+}
