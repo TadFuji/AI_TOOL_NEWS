@@ -1,10 +1,10 @@
 {
   "category": "3. Coding & Development",
   "tool": "GitHub Copilot",
-  "summary": "GitHub Copilotが新たにOpenCodeに対応しました。Pro、Business、Enterpriseプランのユーザーは、OpenCodeエディタ内で直接AIによるコーディング支援を受けられるようになり、開発ワークフローがより円滑になります。",
-  "why": "サポートされる開発環境が拡大したことで、エンジニアは特定のIDEに縛られず、好みのツールでCopilotの強力な補完機能やチャット機能を活用できるようになります。",
+  "summary": "GitHub Copilotが「OpenCode」の正式サポートを開始しました。Pro、Business、Enterpriseプランのユーザーは、OpenCode環境内でCopilotの強力なコード補完や支援機能を直接利用できるようになります。",
+  "why": "利用可能な開発環境が拡大したことで、特定のIDEに縛られず好みのプラットフォームでAI支援を受けられるようになり、開発の柔軟性が向上します。",
   "score": 3,
   "post_date": "2026-02-02 17:05",
   "url": "https://x.com/github/status/2018370230343340341",
-  "collected_at": "2026-02-03T08:18:24.276478+09:00"
+  "collected_at": "2026-02-03T08:26:29.204545+09:00"
 }
