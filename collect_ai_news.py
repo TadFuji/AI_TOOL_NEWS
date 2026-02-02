@@ -57,7 +57,8 @@ def get_category_news(category_name, tools_list):
     JST = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(JST)
     current_date = now.strftime("%Y-%m-%d")
-    from_date = (now - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
+    # 検索範囲を2時間に短縮 (xAIの検索対象を絞り込む)
+    from_date = (now - datetime.timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%S")
     
     # Collect all X handles for this category (max 10 for x_search)
     all_accounts = []
@@ -76,7 +77,7 @@ def get_category_news(category_name, tools_list):
     prompt = (
         f"Role: AI News Aggregator for Japanese audience.\n"
         f"Current Date: {current_date}\n\n"
-        f"Task: Search X for the LATEST updates (last 3 days) from these AI tools/companies:\n"
+        f"Task: Search X for the LATEST updates (last 2 hours) from these AI tools/companies:\n"
         f"{tools_desc}\n"
         "INSTRUCTIONS:\n"
         "1. Search X for posts from the official accounts listed above.\n"
@@ -206,13 +207,26 @@ def process_category(category_data, report_dir):
             final_why = "詳細をご確認ください。"
             final_score = 3
             
+            # 1. 投稿URLからユニークなファイル名を生成
+            import hashlib
+            url_hash = hashlib.md5(post_url.encode()).hexdigest()[:8]
+            count_str = tool_name.replace(' ', '_').replace('/', '-')
+            filename = f"{count_str}_{url_hash}.json"
+            filepath = os.path.join(report_dir, filename)
+
+            # 2. 既にアーカイブ済みの場合はGeminiを呼ばずにスキップ（重要：コスト削減）
+            if os.path.exists(filepath):
+                with IO_LOCK:
+                    print(f"  ⏭️ {tool_name}: Already processed. Skipping Gemini.")
+                continue
+
             if len(post_text) > 20:
                 try:
                     from gemini_x_filter import filter_x_updates_with_gemini
                     gemini_result = filter_x_updates_with_gemini(post_text, tool_name)
                     
                     if gemini_result is None:
-                        # No functional news found
+                        # 有用なニュースと判定されなかった場合
                         continue
                     
                     if "error" in gemini_result:
@@ -229,12 +243,7 @@ def process_category(category_data, report_dir):
             with IO_LOCK:
                 print(f"  ✅ News Found: {tool_name}")
 
-            # Improvement: Create unique filename using hash of URL to prevent overwriting
-            import hashlib
-            url_hash = hashlib.md5(post_url.encode()).hexdigest()[:8]
-            count_str = tool_name.replace(' ', '_').replace('/', '-')
-            filename = f"{count_str}_{url_hash}.json"
-            filepath = os.path.join(report_dir, filename)
+            # 3. JSONレポートの保存
             
             # Improvement: Save as structured JSON instead of Markdown (Data Integrity)
             report_data = {
