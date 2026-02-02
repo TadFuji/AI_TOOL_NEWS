@@ -60,6 +60,8 @@ Return ONLY the JSON. No markdown fencing.
     """
 
     try:
+        # [IMMUTABLE] DO NOT CHANGE without user's explicit consent.
+        # This specific model is chosen for its specific intelligence/behavior.
         response = client.models.generate_content(
             model="gemini-3-flash-preview", 
             contents=prompt

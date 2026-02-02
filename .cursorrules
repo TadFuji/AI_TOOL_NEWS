@@ -1,0 +1,14 @@
+# AI TOOL NEWS Project Rules
+
+## [CRITICAL] LLM Model Immutability Law
+This project depends on the specific behavior, latency, and cost of the following two models. AI agents are STRICTLY PROHIBITED from changing these model IDs in the code without explicit, written consent from 藤川さん (the user).
+
+1.  **xAI Collection Model**: `grok-4-1-fast-non-reasoning`
+2.  **Google Analysis Model**: `gemini-3-flash-preview`
+
+### Rule Details:
+- **Never upgrade**: Even if a "superior" model (e.g., Gemini 2.0 Pro, Grok 4.5) is available, DO NOT update the code constants.
+- **Never substitute**: Do not replace with cheaper or faster alternatives unless explicitly ordered.
+- **Check before edit**: Before modifying `collect_ai_news.py` or `gemini_x_filter.py`, always verify that the model constants are preserved.
+
+FAILURE TO FOLLOW THIS RULE IS A BREAK OF TRUST AND PROJECT INTEGRITY.

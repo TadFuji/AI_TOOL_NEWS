@@ -19,7 +19,10 @@ def load_api_key():
 API_KEY = load_api_key()
 # Use Responses API for server-side agentic x_search
 API_URL = "https://api.x.ai/v1/responses"
-MODEL = "grok-4-1-fast"  # Optimized for agentic search
+# [IMMUTABLE] DO NOT CHANGE without user's explicit consent.
+# This specific model is chosen for its non-reasoning agentic speed.
+MODEL = "grok-4-1-fast-non-reasoning" 
+
 
 TARGETS_FILE = "targets.json"
 BASE_REPORT_DIR = "reports"
