@@ -1,10 +1,10 @@
 {
   "category": "3. Coding & Development",
   "tool": "GitHub Copilot",
-  "summary": "GitHub Copilotの機能を自作アプリに組み込める「GitHub Copilot SDK」が公開されました。このSDKを利用することで、GitHub上のコンテキストを活用したパーソナライズ機能や、独自のCopilotエージェントを自身のアプリケーション内で開発・統合することが可能になります。",
-  "why": "開発者がCopilotの推論能力やコンテキスト把握能力を外部アプリに直接実装できるようになり、AIエージェント構築の自由度が飛躍的に向上します。",
+  "summary": "GitHub Copilotの機能を自身のアプリに組み込める「GitHub Copilot SDK」が新たに公開されました。GitHubプロフィールのコンテキストを活用し、パーソナライズされた学習体験などを提供する独自のCopilotエージェントを構築することが可能になります。",
+  "why": "開発者がCopilotの強力なAI機能を外部アプリへ統合できるようになり、ユーザーごとに最適化された高度な支援機能を容易に実装可能になるため、非常に重要です。",
   "score": 4,
   "post_date": "2026-02-01 18:13",
   "url": "https://x.com/github/status/2018024851772973401",
-  "collected_at": "2026-02-02T20:34:56.543279+09:00"
+  "collected_at": "2026-02-02T21:55:56.690384+09:00"
 }
