@@ -1,0 +1,10 @@
+{
+  "category": "4. Key AI Companies",
+  "tool": "Anthropic",
+  "summary": "Appleの開発環境であるXcodeにClaude Agent SDKが直接統合されました。これにより、開発者はiPhone、Mac、Apple Vision Pro向けのアプリ開発において、Xcode内でClaude Codeの高度な機能をシームレスに利用できるようになります。",
+  "why": "主要なIDEへの直接統合により、AIによるコード生成やデバッグが開発フロー内で完結し、開発者の生産性が大幅に向上するためです。",
+  "score": 4,
+  "post_date": "2026-02-03 19:38",
+  "url": "https://x.com/AnthropicAI/status/2018771170938724682",
+  "collected_at": "2026-02-04T04:43:35.925002+09:00"
+}
