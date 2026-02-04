@@ -250,12 +250,10 @@ def generate_html_from_items(items, title, tool_map):
         # Date Header Grouping
         if item['date'] != current_date:
             current_date = item['date']
-            content_html += f'<h2 class="category-title" style="margin-top:40px;">{current_date}</h2>'
+            content_html += f'<h2 class="category-title">{current_date}</h2>'
 
         # Resolve accounts for search fallback
-        # item['tool'] is the key in targets.json
         accounts = tool_map.get(item['tool'], {}).get('accounts', [])
-        # Default to tool name if no account found (fallback)
         primary_account = accounts[0] if accounts else item['tool'].replace(" ", "")
         
         search_query = f"from:{primary_account}"
@@ -269,19 +267,19 @@ def generate_html_from_items(items, title, tool_map):
             is_suspicious = True
             valid_url = search_url
             
-        # Optional Reference URL (extracted from text)
+        # Optional Reference URL
         ref_btn = ""
         if item.get('ref_url'):
             ref_btn = f"""
-                <a href="{item['ref_url']}" target="_blank" class="source-link" style="background: rgba(0,242,255,0.1); border: 1px solid var(--accent-color); color: var(--accent-color);">
+                <a href="{item['ref_url']}" target="_blank" class="source-link">
                     <i class="fas fa-external-link-alt"></i> 参照資料
                 </a>
             """
 
         card_buttons = f"""
-            <div class="news-footer" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="news-footer">
                 <a href="{valid_url}" target="_blank" class="source-link">
-                    { '投稿を見る' if not is_suspicious else '⚠️ 検索結果 (自動修正)' }
+                    <i class="fab fa-x-twitter"></i> { '投稿を見る' if not is_suspicious else '⚠️ 検索結果' }
                 </a>
                 {ref_btn}
             </div>
@@ -304,15 +302,18 @@ def generate_html_from_items(items, title, tool_map):
         <div class="news-card {impact_class}">
             <div class="news-header">
                 <div class="tool-name">
-                    {item['tool']} {stars}
+                    <span class="name">{item['tool']}</span>
+                    {stars}
                 </div>
-                <div class="post-date" style="font-size:0.75em; color:#888; margin-top:2px;">
+                <div class="post-date">
                     <i class="far fa-clock"></i> {item['display_date']}
                 </div>
             </div>
             <div class="news-content">
                 <p><strong>{item['summary']}</strong></p>
-                <p style="margin-top: 10px; font-size: 0.9em; color: #aaa;"><i class="fas fa-info-circle"></i> {item['why']}</p>
+                <div class="why-section">
+                    <i class="fas fa-info-circle"></i> {item['why']}
+                </div>
             </div>
             {card_buttons}
         </div>
@@ -323,13 +324,12 @@ def generate_html_from_items(items, title, tool_map):
         content_html = "<div class='no-news'>期間内のニュースは見つかりませんでした。</div>"
         
     # If it's the latest page, the navigation link already shows the status clearly.
-    # Hide the redundant date-badge for the index page.
-    badge_html = ""
-    # Only show badge if it provides extra context (like archive month)
+    # Hide the redundant title for the index page.
+    header_html = ""
     if "Latest" not in title:
-        badge_html = f'<div style="text-align:center; margin-bottom:40px;"><div class="date-badge"><i class="far fa-calendar-alt"></i> {title}</div></div>'
+        header_html = f'<div style="text-align:center; margin-bottom:40px;"><h2 class="category-title">{title}</h2></div>'
 
-    return HTML_HEADER.format(active_latest=active_latest, active_archives=active_archives) + badge_html + content_html + HTML_FOOTER
+    return HTML_HEADER.format(active_latest=active_latest, active_archives=active_archives) + header_html + content_html + HTML_FOOTER
 
 def load_all_reports():
     """Scans for both legacy .md and new .json reports and parses them efficiently."""
@@ -497,9 +497,9 @@ def build():
     archive_links_html += "</div>"
     
     # 3. Generate Archives Index
-    # Use active_archives class and show the context badge
-    badge_html = '<div style="text-align:center; margin-bottom:40px;"><div class="date-badge"><i class="far fa-calendar-alt"></i> Select Month</div></div>'
-    archives_page = HTML_HEADER.format(active_latest="", active_archives="active-archives") + badge_html + archive_links_html + HTML_FOOTER
+    # Use active_archives class
+    header_html = '<div style="text-align:center; margin-bottom:60px;"><h2 class="category-title">Select Month</h2></div>'
+    archives_page = HTML_HEADER.format(active_latest="", active_archives="active-archives") + header_html + archive_links_html + HTML_FOOTER
     with open(os.path.join(DOCS_DIR, "archives.html"), 'w', encoding='utf-8') as f:
         f.write(archives_page)
     print("Generated archives.html")
