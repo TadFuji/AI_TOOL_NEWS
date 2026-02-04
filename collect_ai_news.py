@@ -57,8 +57,8 @@ def get_category_news(category_name, tools_list):
     JST = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(JST)
     current_date = now.strftime("%Y-%m-%d")
-    # 検索範囲を2時間に短縮 (xAIの検索対象を絞り込む)
-    from_date = (now - datetime.timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%S")
+    # 検索範囲を1.2時間に短縮 (重複ヒットとコンテキスト量を削減)
+    from_date = (now - datetime.timedelta(hours=1.2)).strftime("%Y-%m-%dT%H:%M:%S")
     
     # Collect all X handles for this category (max 10 for x_search)
     all_accounts = []
