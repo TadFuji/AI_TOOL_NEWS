@@ -5,6 +5,11 @@ import datetime
 import requests
 import concurrent.futures
 import threading
+import subprocess
+from post_to_x import post_item_to_x, get_twitter_client
+
+# X Client (Persistent if possible)
+X_CLIENT = None
 
 # Configuration
 def load_api_key():
@@ -43,6 +48,53 @@ def load_targets():
     """Loads the monitoring targets from JSON."""
     with open(TARGETS_FILE, 'r', encoding='utf-8') as f:
         return json.load(f)
+
+def realtime_delivery(item):
+    """
+    Handles immediate delivery to X and update of the Web site.
+    """
+    global X_CLIENT
+    with IO_LOCK:
+        print(f"🚀 Real-time Delivery Initiated: {item['tool']}")
+        
+        # 1. Post to X
+        if X_CLIENT is None:
+            X_CLIENT = get_twitter_client()
+        
+        # Prepare item for post_to_x format (needs id)
+        x_item = item.copy()
+        x_item['id'] = item['url']
+        
+        posted = post_item_to_x(x_item, X_CLIENT)
+        
+        # 2. Update Web Site
+        print("  🏗️ Rebuilding site...")
+        try:
+            env = os.environ.copy()
+            env["PYTHONIOENCODING"] = "utf-8"
+            res = subprocess.run(["python", "build_site.py"], check=True, capture_output=True, text=True, encoding="utf-8", env=env)
+            print("  ✅ Site rebuilt.")
+        except subprocess.CalledProcessError as e:
+            print(f"  ❌ Site rebuild failed: {e}")
+            print(f"  STDOUT: {e.stdout}")
+            print(f"  STDERR: {e.stderr}")
+            return
+        except Exception as e:
+            print(f"  ❌ Error during site rebuild: {e}")
+            return
+
+        # 3. Git Push
+        print("  ☁️ Pushing to GitHub...")
+        try:
+            # Stage only necessary files to avoid noise, but here we usually want reports and docs
+            subprocess.run(["git", "add", "."], check=True)
+            commit_msg = f"News Update: {item['tool']} ({datetime.datetime.now().strftime('%H:%M')})"
+            subprocess.run(["git", "commit", "-m", commit_msg], check=True)
+            subprocess.run(["git", "push"], check=True)
+            print("  🛰️ Push complete. Live at https://tadfuji.github.io/AI_TOOL_NEWS/")
+        except Exception as e:
+             # Commit might fail if no changes (though builder should have changed)
+            print(f"  ⚠️ Git sync noted: {e}")
 
 def get_category_news(category_name, tools_list):
     """
@@ -149,8 +201,8 @@ def get_category_news(category_name, tools_list):
                         return f"Error: Parsing failed. Raw: {str(text_content)[:200]}"
                         
                 elif response.status_code == 429:
-                    print(f"    ⚠️ 429 Rate Limit. Sleeping 30s...")
-                    time.sleep(30)
+                    print(f"    ⚠️ 429 Rate Limit. Sleeping 60s...")
+                    time.sleep(60)
                     continue
                 elif response.status_code == 500:
                     print(f"    ⚠️ 500 Server Error. Sleeping 10s and retrying...")
@@ -260,11 +312,14 @@ def process_category(category_data, report_dir):
             with open(filepath, 'w', encoding='utf-8') as f:
                 json.dump(report_data, f, ensure_ascii=False, indent=2)
 
+            # 4. Real-time Delivery (Web & X)
+            realtime_delivery(report_data)
+
     except Exception as e:
         with IO_LOCK:
             print(f"  🔥 Batch Critical Failure {cat_name}: {e}")
             
-    time.sleep(5) 
+    time.sleep(15) 
 
 # Main Execution Block
 if __name__ == "__main__":
@@ -275,8 +330,8 @@ if __name__ == "__main__":
     
     print(f"🚀 Launching {len(config)} category agents...")
 
-    # Process categories with limited parallelism to avoid rate limits
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    # Process categories sequentially to strictly avoid rate limits
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         futures = {executor.submit(process_category, cat, report_dir): cat for cat in config}
         
         for future in concurrent.futures.as_completed(futures):

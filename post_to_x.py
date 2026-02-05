@@ -131,6 +131,31 @@ def parse_report_file(filepath):
                 })
     return items
 
+def post_item_to_x(item, client=None):
+    """Posts a single news item to X."""
+    if not client:
+        client = get_twitter_client()
+    if not client:
+        return False
+
+    history = load_history()
+    if item['id'] in history:
+        return False
+
+    # Construct Tweet
+    tweet_text = f"📢 {item['tool']} Update!\n\n{item['summary']}\n\n{item['url']}\n#AI #{item['category'].replace(' ', '')}"
+
+    try:
+        response = client.create_tweet(text=tweet_text)
+        print(f"  -> Posted to X! Tweet ID: {response.data['id']}")
+        
+        history.append(item['id'])
+        save_history(history)
+        return True
+    except Exception as e:
+        print(f"  -> Failed to post to X: {e}")
+        return False
+
 def main():
     print("=== X Auto-Post Start ===")
     
@@ -158,36 +183,9 @@ def main():
     
     for report_path in all_reports:
         items = parse_report_file(report_path)
-        
         for item in items:
-            if item['id'] in history:
-                continue
-            
-            print(f"New Item found: {item['tool']} - {item['summary'][:30]}...")
-            
-            # Construct Tweet
-            # Max 280 chars. 
-            # Format:
-            # 📢 {Tool Name} Update!
-            # {Summary}
-            # {URL}
-            # #AI #Tech
-            
-            tweet_text = f"📢 {item['tool']} Update!\n\n{item['summary']}\n\n{item['url']}\n#AI #{item['category'].replace(' ', '')}"
-            
-            # Note: 280 char limit ignored (X Premium support)
-
-            try:
-                # Dry run check could go here if implemented as an arg
-                response = client.create_tweet(text=tweet_text)
-                print(f"  -> Posted! Tweet ID: {response.data['id']}")
-                
-                history.append(item['id'])
-                save_history(history) # Save immediately to avoid double post on crash
+            if post_item_to_x(item, client):
                 new_items_count += 1
-                
-            except Exception as e:
-                print(f"  -> Failed to post: {e}")
                 
     if new_items_count == 0:
         print("No new items to post.")
