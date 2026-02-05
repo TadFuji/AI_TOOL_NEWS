@@ -86,14 +86,16 @@ def realtime_delivery(item):
         # 3. Git Push
         print("  ☁️ Pushing to GitHub...")
         try:
-            # Stage only necessary files to avoid noise, but here we usually want reports and docs
+            # Stage only necessary files
             subprocess.run(["git", "add", "."], check=True)
             commit_msg = f"News Update: {item['tool']} ({datetime.datetime.now().strftime('%H:%M')})"
             subprocess.run(["git", "commit", "-m", commit_msg], check=True)
+            
+            # Pull first to avoid conflicts
+            subprocess.run(["git", "pull", "--rebase"], check=True)
             subprocess.run(["git", "push"], check=True)
             print("  🛰️ Push complete. Live at https://tadfuji.github.io/AI_TOOL_NEWS/")
         except Exception as e:
-             # Commit might fail if no changes (though builder should have changed)
             print(f"  ⚠️ Git sync noted: {e}")
 
 def get_category_news(category_name, tools_list):
