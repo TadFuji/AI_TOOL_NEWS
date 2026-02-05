@@ -1,0 +1,10 @@
+{
+  "category": "1. Top Tier",
+  "tool": "ChatGPT",
+  "summary": "ChatGPTがMCP（Model Context Protocol）アプリへのフルサポートを開始しました。MCP仕様に準拠したアプリであればChatGPT内でシームレスに動作可能となり、外部ツールやデータソースとの連携が飛躍的に容易になります。",
+  "why": "オープンな標準規格であるMCPへの対応により、エコシステム間の相互運用性が向上し、ユーザーは特定のプラットフォームに縛られず多様な機能を統合できるようになります。",
+  "score": 4,
+  "post_date": "2026-02-04 23:06",
+  "url": "https://x.com/OpenAIDevs/status/2019185727934984384",
+  "collected_at": "2026-02-05T14:19:41.763567+09:00"
+}
