@@ -1,0 +1,10 @@
+{
+  "category": "3. Coding & Development",
+  "tool": "Hugging Face",
+  "summary": "Hugging Faceにて、ベンチマークへのPR投稿機能やData StudioでのAIチャット機能、MLX互換性の表示、LanceDB形式のサポートなど、多数の機能更新が発表されました。UIの改善やブログの下書き保存機能も追加され、プラットフォーム全体の利便性が向上しています。",
+  "why": "評価プロセスの民主化やデータ解析のAI化、Appleシリコン(MLX)への最適化により、モデル開発と検証のワークフローが大幅に効率化されます。",
+  "score": 4,
+  "post_date": "2026-02-06 12:46",
+  "url": "https://x.com/huggingface/status/2019754567685050384",
+  "collected_at": "2026-02-07T01:56:53.615037+09:00"
+}
