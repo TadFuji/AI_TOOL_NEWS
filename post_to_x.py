@@ -93,42 +93,8 @@ def parse_report_file(filepath):
             print(f"Error parsing JSON {filepath}: {e}")
         return items
 
-    # Legacy Markdown Parsing
-    with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
-
-    # Extract Category
-    cat_match = re.search(r'# (.*?) - Daily Report', content)
-    category = cat_match.group(1) if cat_match else "AI News"
-
-    # Split by tool sections (## ToolName)
-    sections = re.split(r'^## ', content, flags=re.MULTILINE)[1:]
-    
-    for section in sections:
-        lines = section.strip().split('\n')
-        if not lines: continue
-        tool_name = lines[0].strip()
-        body_text = "\n".join(lines[1:]).strip()
-
-        # New logic: find "**Summary**:" and take the rest of the text
-        summary_search = re.search(r'\*\*Summary\*\*:\s*(.*)', body_text, re.DOTALL)
-        url_search = re.findall(r'- URL:\s*(https?://[^\s\n]+)', body_text)
-        
-        if summary_search:
-            summary_raw = summary_search.group(1).strip()
-            summary = re.split(r'\n- (?:Time|URL):', summary_raw)[0].strip()
-            summary = summary.replace("**", "")
-
-            url = url_search[-1] if url_search else ""
-            
-            if len(summary) > 5 and url.startswith("http"):
-                items.append({
-                    "tool": tool_name,
-                    "category": category,
-                    "summary": summary,
-                    "url": url,
-                    "id": url
-                })
+    # Note: Legacy Markdown format is no longer supported.
+    # All reports are now stored as JSON (since 2026-01-29 JSON Pivot).
     return items
 
 def post_item_to_x(item, client=None):

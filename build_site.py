@@ -81,113 +81,7 @@ def clean_summary_text(text, url=None, date=None):
     
     return summary, embedded_urls
 
-def parse_report_file(filepath):
-    """Parses a markdown report and returns a list of news items (dicts).."""
-    items = []
-    with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
 
-    # Extract Category
-    cat_match = re.search(r'# (.*?) - Daily Report', content)
-    category = cat_match.group(1) if cat_match else "Uncategorized"
-
-    sections = re.split(r'^## ', content, flags=re.MULTILINE)[1:]
-    
-    for section in sections:
-        lines = section.strip().split('\n')
-        if not lines: continue
-        tool_name = lines[0].strip()
-        body_text = "\n".join(lines[1:]).strip()
-
-        # Check for empty report immediately
-        if "No recent posts" in body_text or "Updates not found" in body_text or "No significant news found" in body_text or body_text.strip() == "":
-            continue
-
-        # Split by "- Post:"
-        post_blocks = []
-        if "- Post:" in body_text:
-            raw_chunks = body_text.split("- Post:")
-            for chunk in raw_chunks:
-                if not chunk.strip(): continue
-                post_blocks.append(chunk.strip())
-        else:
-            post_blocks = [body_text]
-
-        for block in post_blocks:
-            if "No significant news found" in block or "no significant news found" in block.lower():
-                continue
-                
-            # Parse Date
-            time_match = re.search(r'(?:- )?Time:? (.*)', block)
-            date_match = re.search(r'(?:- )?\*\*Date\*\*:? (.*)', block)
-            
-            item_date_raw = "Unknown Date"
-            if time_match:
-                item_date_raw = time_match.group(1).strip()
-            elif date_match:
-                item_date_raw = date_match.group(1).strip()
-            
-            # Parse URL
-            url_match_main = re.search(r'(?:- )?URL:? (https?://\S+)', block)
-            url_match_sub = re.search(r'(?:- )?\*\*URL\*\*:? (https?://\S+)', block)
-            
-            url = "#"
-            if url_match_main:
-                url = url_match_main.group(1).strip()
-            elif url_match_sub:
-                url = url_match_sub.group(1).strip()
-            
-            # Use helper to clean summary
-            summary, ext_urls = clean_summary_text(block, url=url, date=item_date_raw)
-            
-            if not summary or summary == "":
-                continue
-            
-            why = "詳細をご確認ください。" 
-            
-            # Add extracted URLs to a reference field if not the X URL
-            ref_url = ext_urls[0] if ext_urls and ext_urls[0] != url else None
-
-            # Date Processing
-            display_date = item_date_raw
-            sort_date = item_date_raw
-            item_date = "Unknown Date"
-
-            try:
-                # Remove common timezone strings for parser
-                clean_date = re.sub(r'\(?(GMT|UTC|JST)\)?', '', item_date_raw).strip()
-                # Handle YYYY-MM-DD HH:MM
-                dt = parser.parse(clean_date)
-                if dt.tzinfo is None:
-                    # Assume UTC if not specified, then convert to JST
-                    dt = dt.replace(tzinfo=datetime.timezone.utc)
-                jst = datetime.timezone(datetime.timedelta(hours=9))
-                dt_jst = dt.astimezone(jst)
-                
-                display_date = dt_jst.strftime("%Y年%m月%d日 %H時%M分")
-                sort_date = dt_jst.strftime("%Y-%m-%d %H:%M")
-                item_date = dt_jst.strftime("%Y-%m-%d")
-            except:
-                 match = re.search(r'(\d{4}-\d{2}-\d{2})', item_date_raw)
-                 if match:
-                     item_date = match.group(1)
-                 elif item_date_raw != "Unknown Date" and len(item_date_raw) >= 10:
-                     item_date = item_date_raw[:10]
-            
-            items.append({
-                "date": item_date,
-                "sort_date": sort_date,
-                "display_date": display_date,
-                "category": category,
-                "tool": tool_name,
-                "summary": summary,
-                "why": why,
-                "url": url,
-                "ref_url": ref_url,
-                "raw_text": block
-            })
-
-    return items
 
 def load_targets():
     """Loads targets.json to map tool names to twitter handles."""
@@ -372,13 +266,6 @@ def load_all_reports():
         except Exception as e:
             print(f"    ⚠️ Error parsing JSON {path}: {e}")
 
-    # Grid search all legacy MD reports
-    md_reports = glob.glob(os.path.join(REPORTS_DIR, "*", "*.md"))
-    print(f"  Scanning {len(md_reports)} Markdown reports (Legacy)...")
-    for path in md_reports:
-        items = parse_report_file(path)
-        all_items.extend(items)
-        
     return all_items
 
 def process_item_date(date_raw):

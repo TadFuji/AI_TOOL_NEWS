@@ -2,8 +2,8 @@ import os
 import json
 import time
 import datetime
+import hashlib
 import requests
-import concurrent.futures
 import threading
 import subprocess
 from post_to_x import post_item_to_x, get_twitter_client
@@ -262,7 +262,6 @@ def process_category(category_data, report_dir):
             final_score = 3
             
             # 1. 投稿URLからユニークなファイル名を生成
-            import hashlib
             url_hash = hashlib.md5(post_url.encode()).hexdigest()[:8]
             count_str = tool_name.replace(' ', '_').replace('/', '-')
             filename = f"{count_str}_{url_hash}.json"
@@ -333,13 +332,10 @@ if __name__ == "__main__":
     print(f"🚀 Launching {len(config)} category agents...")
 
     # Process categories sequentially to strictly avoid rate limits
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        futures = {executor.submit(process_category, cat, report_dir): cat for cat in config}
-        
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                future.result()
-            except Exception as exc:
-                print(f"Category thread exception: {exc}")
+    for cat in config:
+        try:
+            process_category(cat, report_dir)
+        except Exception as exc:
+            print(f"Category exception: {exc}")
 
     print("\n=== Collection Complete ===")
