@@ -38,21 +38,6 @@ jobs:
       run: |
         python collect_ai_news.py
 
-
-        
-    - name: Post to X
-      env:
-        X_CONSUMER_KEY: ${{ secrets.X_CONSUMER_KEY }}
-        X_CONSUMER_SECRET: ${{ secrets.X_CONSUMER_SECRET }}
-        X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-        X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
-      run: |
-        python post_to_x.py
-
-
-
-
-
     - name: Build Website
       run: |
         python build_site.py

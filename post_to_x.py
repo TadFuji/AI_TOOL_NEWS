@@ -142,7 +142,6 @@ def main():
     for d in target_dirs:
         day_path = os.path.join(REPORTS_DIR, d)
         if os.path.exists(day_path):
-            all_reports.extend(glob.glob(os.path.join(day_path, "*.md")))
             all_reports.extend(glob.glob(os.path.join(day_path, "*.json")))
 
     new_items_count = 0

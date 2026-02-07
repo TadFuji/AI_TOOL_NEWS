@@ -6,16 +6,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Module-level client (created once, reused across calls)
+_client = None
+
 def filter_x_updates_with_gemini(raw_text: str, tool_name: str) -> dict:
     """
     Filters and summarizes X updates using Gemini 3 Flash Preview.
     Returns a dictionary with 'summary' and 'why', or None if no news found.
     """
+    global _client
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         return {"error": "GOOGLE_API_KEY not found."}
 
-    client = genai.Client(api_key=api_key)
+    if _client is None:
+        _client = genai.Client(api_key=api_key)
 
     prompt = f"""
 Role: Expert AI Tool Analyst & Translator.

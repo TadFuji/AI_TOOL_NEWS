@@ -226,7 +226,7 @@ def generate_html_from_items(items, title, tool_map):
     return HTML_HEADER.format(active_latest=active_latest, active_archives=active_archives) + header_html + content_html + HTML_FOOTER
 
 def load_all_reports():
-    """Scans for both legacy .md and new .json reports and parses them efficiently."""
+    """Scans JSON reports and parses them into news items."""
     all_items = []
     
     # Grid search all JSON reports (New Standard)

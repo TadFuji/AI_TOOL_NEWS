@@ -4,7 +4,6 @@ import time
 import datetime
 import hashlib
 import requests
-import threading
 import subprocess
 from post_to_x import post_item_to_x, get_twitter_client
 
@@ -32,8 +31,7 @@ MODEL = "grok-4-1-fast-non-reasoning"
 TARGETS_FILE = "targets.json"
 BASE_REPORT_DIR = "reports"
 
-# Global lock for file writing/printing
-IO_LOCK = threading.Lock()
+
 
 def setup_report_dir():
     """Creates a directory for today's reports."""
@@ -54,49 +52,48 @@ def realtime_delivery(item):
     Handles immediate delivery to X and update of the Web site.
     """
     global X_CLIENT
-    with IO_LOCK:
-        print(f"🚀 Real-time Delivery Initiated: {item['tool']}")
-        
-        # 1. Post to X
-        if X_CLIENT is None:
-            X_CLIENT = get_twitter_client()
-        
-        # Prepare item for post_to_x format (needs id)
-        x_item = item.copy()
-        x_item['id'] = item['url']
-        
-        posted = post_item_to_x(x_item, X_CLIENT)
-        
-        # 2. Update Web Site
-        print("  🏗️ Rebuilding site...")
-        try:
-            env = os.environ.copy()
-            env["PYTHONIOENCODING"] = "utf-8"
-            res = subprocess.run(["python", "build_site.py"], check=True, capture_output=True, text=True, encoding="utf-8", env=env)
-            print("  ✅ Site rebuilt.")
-        except subprocess.CalledProcessError as e:
-            print(f"  ❌ Site rebuild failed: {e}")
-            print(f"  STDOUT: {e.stdout}")
-            print(f"  STDERR: {e.stderr}")
-            return
-        except Exception as e:
-            print(f"  ❌ Error during site rebuild: {e}")
-            return
+    print(f"🚀 Real-time Delivery Initiated: {item['tool']}")
+    
+    # 1. Post to X
+    if X_CLIENT is None:
+        X_CLIENT = get_twitter_client()
+    
+    # Prepare item for post_to_x format (needs id)
+    x_item = item.copy()
+    x_item['id'] = item['url']
+    
+    posted = post_item_to_x(x_item, X_CLIENT)
+    
+    # 2. Update Web Site
+    print("  🏗️ Rebuilding site...")
+    try:
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        res = subprocess.run(["python", "build_site.py"], check=True, capture_output=True, text=True, encoding="utf-8", env=env)
+        print("  ✅ Site rebuilt.")
+    except subprocess.CalledProcessError as e:
+        print(f"  ❌ Site rebuild failed: {e}")
+        print(f"  STDOUT: {e.stdout}")
+        print(f"  STDERR: {e.stderr}")
+        return
+    except Exception as e:
+        print(f"  ❌ Error during site rebuild: {e}")
+        return
 
-        # 3. Git Push
-        print("  ☁️ Pushing to GitHub...")
-        try:
-            # Stage only necessary files
-            subprocess.run(["git", "add", "."], check=True)
-            commit_msg = f"News Update: {item['tool']} ({datetime.datetime.now().strftime('%H:%M')})"
-            subprocess.run(["git", "commit", "-m", commit_msg], check=True)
-            
-            # Pull first to avoid conflicts
-            subprocess.run(["git", "pull", "--rebase"], check=True)
-            subprocess.run(["git", "push"], check=True)
-            print("  🛰️ Push complete. Live at https://tadfuji.github.io/AI_TOOL_NEWS/")
-        except Exception as e:
-            print(f"  ⚠️ Git sync noted: {e}")
+    # 3. Git Push
+    print("  ☁️ Pushing to GitHub...")
+    try:
+        # Stage only necessary files
+        subprocess.run(["git", "add", "."], check=True)
+        commit_msg = f"News Update: {item['tool']} ({datetime.datetime.now().strftime('%H:%M')})"
+        subprocess.run(["git", "commit", "-m", commit_msg], check=True)
+        
+        # Pull first to avoid conflicts
+        subprocess.run(["git", "pull", "--rebase"], check=True)
+        subprocess.run(["git", "push"], check=True)
+        print("  🛰️ Push complete. Live at https://tadfuji.github.io/AI_TOOL_NEWS/")
+    except Exception as e:
+        print(f"  ⚠️ Git sync noted: {e}")
 
 def get_category_news(category_name, tools_list):
     """
@@ -228,20 +225,17 @@ def process_category(category_data, report_dir):
     tools_list = category_data['tools']
     JST = datetime.timezone(datetime.timedelta(hours=9))
     
-    with IO_LOCK:
-        print(f"📦 Batch Processing: {cat_name} ({len(tools_list)} tools)...")
+    print(f"📦 Batch Processing: {cat_name} ({len(tools_list)} tools)...")
     
     try:
         results = get_category_news(cat_name, tools_list)
         
         if isinstance(results, str) and results.startswith("Error"):
-             with IO_LOCK:
-                 print(f"  ❌ Batch Failed: {cat_name} -> {results}")
+             print(f"  ❌ Batch Failed: {cat_name} -> {results}")
              return
 
         if not isinstance(results, list):
-             with IO_LOCK:
-                 print(f"  ❌ Batch Error: Expected list, got {type(results)}")
+             print(f"  ❌ Batch Error: Expected list, got {type(results)}")
              return
 
         for item in results:
@@ -249,8 +243,7 @@ def process_category(category_data, report_dir):
             has_news = item.get('has_news', False)
             
             if not has_news:
-                with IO_LOCK:
-                    print(f"  ⚪ {tool_name}: No news.")
+                print(f"  ⚪ {tool_name}: No news.")
                 continue
 
             post_text = item.get('post_text', '')
@@ -269,8 +262,7 @@ def process_category(category_data, report_dir):
 
             # 2. 既にアーカイブ済みの場合はGeminiを呼ばずにスキップ（重要：コスト削減）
             if os.path.exists(filepath):
-                with IO_LOCK:
-                    print(f"  ⏭️ {tool_name}: Already processed. Skipping Gemini.")
+                print(f"  ⏭️ {tool_name}: Already processed. Skipping Gemini.")
                 continue
 
             if len(post_text) > 15:
@@ -283,8 +275,7 @@ def process_category(category_data, report_dir):
                         continue
                     
                     if "error" in gemini_result:
-                        with IO_LOCK:
-                            print(f"  ⚠️ Gemini Skip: {gemini_result['error']}")
+                        print(f"  ⚠️ Gemini Skip: {gemini_result['error']}")
                         final_summary = post_text
                     else:
                         final_summary = gemini_result.get('summary', post_text)
@@ -294,12 +285,10 @@ def process_category(category_data, report_dir):
                     pass
             else:
                 # 短すぎる投稿はニュースではないため除外
-                with IO_LOCK:
-                    print(f"  ⚪ {tool_name}: Post too short ({len(post_text)} chars). Skipping.")
+                print(f"  ⚪ {tool_name}: Post too short ({len(post_text)} chars). Skipping.")
                 continue
 
-            with IO_LOCK:
-                print(f"  ✅ News Found: {tool_name}")
+            print(f"  ✅ News Found: {tool_name}")
 
             # 3. JSONレポートの保存
             
@@ -322,8 +311,7 @@ def process_category(category_data, report_dir):
             realtime_delivery(report_data)
 
     except Exception as e:
-        with IO_LOCK:
-            print(f"  🔥 Batch Critical Failure {cat_name}: {e}")
+        print(f"  🔥 Batch Critical Failure {cat_name}: {e}")
             
     time.sleep(15) 
 
