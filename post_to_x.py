@@ -53,7 +53,7 @@ def get_twitter_client():
         return None
 
 def parse_report_file(filepath):
-    """Parses a report file (Markdown or JSON) to extract news items."""
+    """Parses a JSON report file to extract news items."""
     items = []
     
     if filepath.endswith('.json'):

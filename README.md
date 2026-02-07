@@ -63,7 +63,7 @@ AI TOOL NEWSは、主要なAIツールや企業の公式X（旧Twitter）アカ�
 
 ---
 ## 🤖 AI Agent Instructions
-このプロジェクトは **GitHub Actions により1時間おきに自動更新** (Bot Run Output) されます。
+このプロジェクトは **GitHub Actions により4時間おきに自動更新** (Bot Run Output) されます。
 AIエージェントがプログラムの修正やUIの変更をプッシュする際は、以下のルールを厳守してください。
 
 1. **プッシュ前の同期**: 自身の変更をプッシュする前に、必ず `git pull --rebase origin main` を実行してGitHub側の最新ニュースを取り込んでください。
