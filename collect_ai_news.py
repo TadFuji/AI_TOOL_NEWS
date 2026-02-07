@@ -273,7 +273,7 @@ def process_category(category_data, report_dir):
                     print(f"  ⏭️ {tool_name}: Already processed. Skipping Gemini.")
                 continue
 
-            if len(post_text) > 20:
+            if len(post_text) > 15:
                 try:
                     from gemini_x_filter import filter_x_updates_with_gemini
                     gemini_result = filter_x_updates_with_gemini(post_text, tool_name)
@@ -292,6 +292,11 @@ def process_category(category_data, report_dir):
                         final_score = gemini_result.get('score', 3)
                 except ImportError:
                     pass
+            else:
+                # 短すぎる投稿はニュースではないため除外
+                with IO_LOCK:
+                    print(f"  ⚪ {tool_name}: Post too short ({len(post_text)} chars). Skipping.")
+                continue
 
             with IO_LOCK:
                 print(f"  ✅ News Found: {tool_name}")
