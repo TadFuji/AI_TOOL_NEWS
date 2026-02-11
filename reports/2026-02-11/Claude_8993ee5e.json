@@ -1,0 +1,10 @@
+{
+  "category": "1. Top Tier",
+  "tool": "Claude",
+  "summary": "AIワークスペース「Cowork」のWindows版が新たにリリースされ、MacOS版と同様のファイルアクセスやMCPコネクタなどの全機能が利用できるようになりました。",
+  "why": "Windows OSへの対応とMCP（Model Context Protocol）のサポートにより、ローカルファイル操作や外部ツールとの高度な連携がデスクトップ環境で実現します。",
+  "score": 3,
+  "post_date": "2026-02-10 21:31",
+  "url": "https://x.com/claudeai/status/2021336313979625910",
+  "collected_at": "2026-02-11T17:57:51.560825+09:00"
+}
