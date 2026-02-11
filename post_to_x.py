@@ -86,6 +86,7 @@ def parse_report_file(filepath):
                     "tool": tool_name,
                     "category": category,
                     "summary": summary,
+                    "hook": data.get('hook', ''),
                     "url": url,
                     "id": url
                 })
@@ -108,8 +109,12 @@ def post_item_to_x(item, client=None):
     if item['id'] in history:
         return False
 
-    # Construct Tweet
-    tweet_text = f"📢 {item['tool']} Update!\n\n{item['summary']}\n\n{item['url']}\n#AI #{item['category'].replace(' ', '')}"
+    # Use hook for engaging intro, fall back to standard format
+    hook = item.get('hook', '')
+    if hook:
+        tweet_text = f"\U0001f525 {hook}\n\n{item['summary']}\n\n{item['url']}\n#AI #{item['category'].replace(' ', '')}"
+    else:
+        tweet_text = f"\U0001f4e2 {item['tool']} Update!\n\n{item['summary']}\n\n{item['url']}\n#AI #{item['category'].replace(' ', '')}"
 
     try:
         response = client.create_tweet(text=tweet_text)

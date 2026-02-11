@@ -128,24 +128,31 @@ def get_category_news(category_name, tools_list):
     prompt = (
         f"Role: AI News Aggregator for Japanese audience.\n"
         f"Current Date: {current_date}\n\n"
-        f"Task: Search X for the LATEST updates (last 2 hours) from these AI tools/companies:\n"
+        f"Task: Search X for the LATEST updates (last 4 hours) from these AI tools/companies:\n"
         f"{tools_desc}\n"
         "INSTRUCTIONS:\n"
         "1. Search X for posts from the official accounts listed above.\n"
         "2. Look for: Product launches, model updates, new features, or official announcements.\n"
         "3. Ignore: random chatter, retweets of unrelated content, promotional fluff.\n"
-        "4. Output MUST be a valid JSON list. Each object represents ONE tool:\n"
+        "4. SOURCE RELIABILITY: Prioritize official announcements and first-party statements.\n"
+        "   - 'official': Direct from the company's verified account\n"
+        "   - 'first_party': From a key person (CEO, CTO, lead dev) at the company\n"
+        "   - 'community': Reported by credible third-party developers/journalists\n"
+        "   - 'unverified': Cannot be traced to an official source\n"
+        "5. Output MUST be a valid JSON list. Each object represents ONE tool:\n"
         "   [\n"
         "     {\n"
         "       \"tool_name\": \"Name from the list\",\n"
         "       \"has_news\": true/false,\n"
         "       \"post_text\": \"Raw text of the post (or 'No recent updates')\",\n"
         "       \"post_date\": \"YYYY-MM-DD HH:MM\",\n"
-        "       \"post_url\": \"https://x.com/...\"\n"
+        "       \"post_url\": \"https://x.com/...\",\n"
+        "       \"why_notable\": \"1-line hypothesis: why this matters to developers/users (empty string if no news)\",\n"
+        "       \"source_type\": \"official|first_party|community|unverified\"\n"
         "     }\n"
         "   ]\n"
-        "5. If no news is found for a tool, set has_news: false.\n"
-        "6. Return ONLY the JSON. No markdown fencing."
+        "6. If no news is found for a tool, set has_news: false.\n"
+        "7. Return ONLY the JSON. No markdown fencing."
     )
 
     payload = {
@@ -249,10 +256,13 @@ def process_category(category_data, report_dir):
             post_text = item.get('post_text', '')
             post_date = item.get('post_date', 'Unknown Date')
             post_url = item.get('post_url', '#')
+            why_notable = item.get('why_notable', '')
+            source_type = item.get('source_type', 'unverified')
 
             final_summary = post_text
-            final_why = "詳細をご確認ください。"
+            final_why = why_notable if why_notable else "詳細をご確認ください。"
             final_score = 3
+            final_hook = ""
             
             # 1. 投稿URLからユニークなファイル名を生成
             url_hash = hashlib.md5(post_url.encode()).hexdigest()[:8]
@@ -268,7 +278,7 @@ def process_category(category_data, report_dir):
             if len(post_text) > 15:
                 try:
                     from gemini_x_filter import filter_x_updates_with_gemini
-                    gemini_result = filter_x_updates_with_gemini(post_text, tool_name)
+                    gemini_result = filter_x_updates_with_gemini(post_text, tool_name, why_notable)
                     
                     if gemini_result is None:
                         # 有用なニュースと判定されなかった場合
@@ -281,6 +291,7 @@ def process_category(category_data, report_dir):
                         final_summary = gemini_result.get('summary', post_text)
                         final_why = gemini_result.get('why', final_why)
                         final_score = gemini_result.get('score', 3)
+                        final_hook = gemini_result.get('hook', '')
                 except ImportError:
                     pass
             else:
@@ -299,6 +310,8 @@ def process_category(category_data, report_dir):
                 "summary": final_summary,
                 "why": final_why,
                 "score": final_score,
+                "hook": final_hook,
+                "source_type": source_type,
                 "post_date": post_date,
                 "url": post_url,
                 "collected_at": datetime.datetime.now(JST).isoformat()
