@@ -1,0 +1,12 @@
+{
+  "category": "3. Coding & Development",
+  "tool": "Cursor",
+  "summary": "AIコードエディタCursorに、大規模なタスクを自律的に遂行する「長時間実行エージェント（Long-running agents）」機能が導入されました。新しい実行基盤により、従来よりも複雑で広範囲なコーディング作業をAIが継続して処理できるようになります。Ultra、Teams、Enterpriseプランで利用可能です。",
+  "why": "AIがプロジェクト全体を俯瞰し、長時間にわたる複雑な作業を自律的に完結できるため、開発者は手動の修正作業から解放され、より高度な設計に集中できます。",
+  "score": 4,
+  "hook": "Cursorが進化！「長時間実行エージェント」で大規模開発もAIが完結へ。",
+  "source_type": "official",
+  "post_date": "2026-02-12 20:32",
+  "url": "https://x.com/cursor_ai/status/2022046178708492445",
+  "collected_at": "2026-02-13T05:43:05.727858+09:00"
+}
