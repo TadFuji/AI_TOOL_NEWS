@@ -1,0 +1,12 @@
+{
+  "category": "3. Coding & Development",
+  "tool": "GitHub Copilot",
+  "summary": "GitHub Copilot ChatがMCP（Model Context Protocol）に対応しました。SentryやNotionなどの外部ツールと直接連携が可能になり、エラーログの解析から修正PRの作成までをシームレスに実行できます。",
+  "why": "外部コンテキストを直接参照できるため、手動のコピペ作業が不要になり、ワークフローの自動化が劇的に進みます。",
+  "score": 4,
+  "hook": "コピペ作業に終止符。MCP対応でCopilotが真の「エージェント」へ。",
+  "source_type": "official",
+  "post_date": "2026-02-14 22:00",
+  "url": "https://x.com/github/status/2022792999676100879",
+  "collected_at": "2026-02-16T14:39:58.245408+09:00"
+}
