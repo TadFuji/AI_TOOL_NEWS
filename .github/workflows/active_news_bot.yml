@@ -1,11 +1,17 @@
+# ===================================================
+# ⚠️ OPERATION SUSPENDED (2026-02-17)
+# To resume: uncomment the schedule and push triggers
+# ===================================================
 name: Active AI News Bot
 
 on:
-  push:
-    branches: [ "main" ]
-  schedule:
-    - cron: '0 */4 * * *'
-  workflow_dispatch:
+  # SUSPENDED: push trigger
+  # push:
+  #   branches: [ "main" ]
+  # SUSPENDED: schedule trigger (was: every 4 hours)
+  # schedule:
+  #   - cron: '0 */4 * * *'
+  workflow_dispatch:  # Keep manual trigger for testing when resuming
 
 permissions:
   contents: write
