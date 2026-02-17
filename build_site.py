@@ -19,6 +19,7 @@ HTML_HEADER = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI TOOL NEWS</title>
+    <meta name="description" content="AIツールの最新アップデートを自動収集・厳選してお届けするニュースサイト。ChatGPT, Gemini, Claude, Midjourney等の公式情報をリアルタイム配信。">
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -285,7 +286,7 @@ def process_item_date(date_raw):
         display_date = dt_jst.strftime("%Y年%m月%d日 %H時%M分")
         sort_date = dt_jst.strftime("%Y-%m-%d %H:%M")
         item_date = dt_jst.strftime("%Y-%m-%d")
-    except:
+    except (ValueError, TypeError, OverflowError):
          match = re.search(r'(\d{4}-\d{2}-\d{2})', date_raw)
          if match:
              item_date = match.group(1)

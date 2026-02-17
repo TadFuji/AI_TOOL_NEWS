@@ -12,15 +12,13 @@
             {
                 "name": "Gemini",
                 "accounts": [
-                    "@GeminiApp",
-                    "@GoogleDeepMind"
+                    "@GeminiApp"
                 ]
             },
             {
                 "name": "Claude",
                 "accounts": [
-                    "@claudeai",
-                    "@AnthropicAI"
+                    "@claudeai"
                 ]
             },
             {

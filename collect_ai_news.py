@@ -185,9 +185,9 @@ def get_category_news(category_name, tools_list):
                         output_list = data.get('output', [])
                         text_content = ""
                         
-                        for item in output_list:
-                            if isinstance(item, dict) and item.get('type') == 'message':
-                                content_list = item.get('content', [])
+                        for output_item in output_list:
+                            if isinstance(output_item, dict) and output_item.get('type') == 'message':
+                                content_list = output_item.get('content', [])
                                 for content_item in content_list:
                                     if isinstance(content_item, dict) and content_item.get('type') == 'output_text':
                                         text_content = content_item.get('text', '')
